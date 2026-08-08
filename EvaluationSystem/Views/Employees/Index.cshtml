@@ -1,0 +1,47 @@
+@model EvaluationSystem.Models.ViewModels.EmployeeListViewModel
+
+@{
+    ViewData["Title"] = "کارکنان تحت ارزیابی";
+}
+
+<div dir="rtl" class="container mt-4">
+
+    <h2 class="text-center mb-4">کارکنان تحت ارزیابی من</h2>
+
+    <table class="table table-bordered table-hover text-end">
+
+        <thead class="table-dark">
+            <tr>
+                <th>کد پرسنلی</th>
+                <th>نام</th>
+                <th>نام خانوادگی</th>
+                <th>شغل</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            @foreach (var employee in Model.Employees)
+            {
+                var job = Model.Jobs.FirstOrDefault(j => j.Id == employee.JobId);
+
+                <tr>
+                    <td>@employee.PersonnelCode</td>
+                    <td>@employee.FirstName</td>
+                    <td>@employee.LastName</td>
+
+<td>
+    <a asp-controller="Employees"
+       asp-action="Evaluate"
+       asp-route-id="@employee.PersonnelCode">
+        @job?.Title
+    </a>
+</td>
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+
+</div>

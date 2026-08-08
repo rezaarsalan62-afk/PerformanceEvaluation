@@ -1,8 +1,29 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "سیستم ارزیابی عملکرد";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="dashboard">
+
+    <h1>سیستم ارزیابی عملکرد کارکنان</h1>
+
+    <div class="dashboard-menu">
+
+       <a asp-controller="Employees" asp-action="Index" class="menu-item">
+    <div class="menu-icon">👥</div>
+    <div class="menu-title">کارکنان</div>
+</a>
+
+
+        <a href="#" class="menu-item">
+            <div class="menu-icon">⚙️</div>
+            <div class="menu-title">تنظیمات</div>
+        </a>
+
+        <a href="#" class="menu-item">
+            <div class="menu-icon">📊</div>
+            <div class="menu-title">گزارشات</div>
+        </a>
+
+    </div>
+
 </div>
