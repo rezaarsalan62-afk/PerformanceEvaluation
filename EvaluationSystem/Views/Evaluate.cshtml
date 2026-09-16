@@ -1,0 +1,89 @@
+@model EvaluationSystem.Models.ViewModels.EvaluationFormViewModel
+
+<h2>فرم ارزیابی عملکرد</h2>
+
+<hr />
+
+<h4>اطلاعات کارمند</h4>
+
+<p>
+    <strong>نام و نام خانوادگی:</strong>
+    @Model.Employee.FirstName @Model.Employee.LastName
+</p>
+
+<p>
+    <strong>کد پرسنلی:</strong>
+    @Model.Employee.PersonnelCode
+</p>
+
+<p>
+    <strong>شغل:</strong>
+    @Model.Job.Title
+</p>
+
+<hr />
+
+<h4>معیارهای ارزیابی</h4>
+
+@foreach (var item in Model.Items)
+{
+    <div style="margin-bottom: 20px;">
+        
+        <strong>@item.Criterion.Title</strong>
+
+        <p>
+            @item.Criterion.Description
+        </p>
+
+        <label>
+            <input type="radio"
+                   name="score_@item.Criterion.Id"
+                   value="1" />
+            خیلی ضعیف
+        </label>
+
+        <label>
+            <input type="radio"
+                   name="score_@item.Criterion.Id"
+                   value="2" />
+            ضعیف
+        </label>
+
+        <label>
+            <input type="radio"
+                   name="score_@item.Criterion.Id"
+                   value="3" />
+            متوسط
+        </label>
+
+        <label>
+            <input type="radio"
+                   name="score_@item.Criterion.Id"
+                   value="4" />
+            خوب
+        </label>
+
+        <label>
+            <input type="radio"
+                   name="score_@item.Criterion.Id"
+                   value="5" />
+            عالی
+        </label>
+
+    </div>
+}
+
+<hr />
+
+<h4>توضیحات ارزیاب</h4>
+
+<textarea name="Comment"
+          rows="5"
+          cols="60"></textarea>
+
+<br />
+<br />
+
+<button type="submit">
+    ثبت ارزیابی
+</button>
