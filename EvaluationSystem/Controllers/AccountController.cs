@@ -1,7 +1,6 @@
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EvaluationSystem.Controllers
 {
@@ -35,9 +34,18 @@ namespace EvaluationSystem.Controllers
 
         private async Task SignInUser(string username)
         {
+            // تعیین کد ارزیاب بر اساس کاربر
+            string evaluatorCode = username switch
+            {
+                "user1" => "1001",
+                "user2" => "1002",
+                _ => ""
+            };
+
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, username)
+                new Claim(ClaimTypes.Name, username),
+                new Claim("EvaluatorCode", evaluatorCode)
             };
 
             var identity = new ClaimsIdentity(
