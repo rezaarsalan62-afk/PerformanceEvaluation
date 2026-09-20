@@ -1,89 +1,3392 @@
 @model EvaluationSystem.Models.ViewModels.EvaluationFormViewModel
 
-<h2>فرم ارزیابی عملکرد</h2>
-
-<hr />
-
-<h4>اطلاعات کارمند</h4>
-
-<p>
-    <strong>نام و نام خانوادگی:</strong>
-    @Model.Employee.FirstName @Model.Employee.LastName
-</p>
-
-<p>
-    <strong>کد پرسنلی:</strong>
-    @Model.Employee.PersonnelCode
-</p>
-
-<p>
-    <strong>شغل:</strong>
-    @Model.Job.Title
-</p>
-
-<hr />
-
-<h4>معیارهای ارزیابی</h4>
-
-@foreach (var item in Model.Items)
-{
-    <div style="margin-bottom: 20px;">
-        
-        <strong>@item.Criterion.Title</strong>
-
-        <p>
-            @item.Criterion.Description
-        </p>
-
-        <label>
-            <input type="radio"
-                   name="score_@item.Criterion.Id"
-                   value="1" />
-            خیلی ضعیف
-        </label>
-
-        <label>
-            <input type="radio"
-                   name="score_@item.Criterion.Id"
-                   value="2" />
-            ضعیف
-        </label>
-
-        <label>
-            <input type="radio"
-                   name="score_@item.Criterion.Id"
-                   value="3" />
-            متوسط
-        </label>
-
-        <label>
-            <input type="radio"
-                   name="score_@item.Criterion.Id"
-                   value="4" />
-            خوب
-        </label>
-
-        <label>
-            <input type="radio"
-                   name="score_@item.Criterion.Id"
-                   value="5" />
-            عالی
-        </label>
-
-    </div>
+@{
+    ViewData["Title"] = "فرم ارزیابی عملکرد";
 }
 
-<hr />
+<style>
+    * {
+        box-sizing: border-box;
+    }
 
-<h4>توضیحات ارزیاب</h4>
+    body {
+        direction: rtl;
+    }
 
-<textarea name="Comment"
-          rows="5"
-          cols="60"></textarea>
+    .evaluation-page {
+        direction: rtl;
+        padding: 25px;
+        background: #f5f6f8;
+        min-height: 100vh;
+    }
 
-<br />
-<br />
+    .page-title {
+        text-align: center;
+        margin-bottom: 20px;
+    }
 
-<button type="submit">
-    ثبت ارزیابی
-</button>
+    .page-title h2 {
+        margin: 0;
+        font-weight: 700;
+    }
+
+    /* مشخصات کارمند */
+
+    .employee-info {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+
+    .employee-info-title {
+        font-size: 17px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .employee-info-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+    }
+
+    .info-box {
+        background: #f8f9fa;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 12px;
+    }
+
+    .info-label {
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 5px;
+    }
+
+    .info-value {
+        font-weight: 600;
+    }
+
+    /* ساختار اصلی */
+
+    .evaluation-layout {
+        display: grid;
+        grid-template-columns: 290px minmax(0, 1fr);
+        gap: 20px;
+        align-items: start;
+    }
+
+    /* سایدبار */
+
+    .sidebar {
+        background: white;
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        position: sticky;
+        top: 20px;
+    }
+
+    .sidebar-title {
+        font-size: 17px;
+        font-weight: 700;
+        margin-bottom: 18px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .summary-item {
+        margin-bottom: 14px;
+    }
+
+    .summary-label {
+        display: block;
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 6px;
+    }
+
+    .summary-value {
+        width: 100%;
+        border: 1px solid #dfe3e8;
+        background: #f8f9fa;
+        border-radius: 7px;
+        padding: 9px;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .grade-value {
+        font-size: 21px;
+        font-weight: 800;
+    }
+
+    .sidebar-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        margin-top: 20px;
+    }
+
+    .sidebar-buttons button,
+    .sidebar-buttons a {
+        width: 100%;
+        min-height: 42px;
+    }
+
+    .improvement-title {
+        margin-top: 22px;
+        margin-bottom: 7px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .improvement-text {
+        width: 100%;
+        min-height: 130px;
+        resize: vertical;
+        border: 1px solid #dfe3e8;
+        border-radius: 8px;
+        padding: 10px;
+        direction: rtl;
+    }
+
+    /* محتوای اصلی */
+
+    .main-content {
+        min-width: 0;
+    }
+
+    .tabs {
+        display: flex;
+        gap: 6px;
+        background: white;
+        border-radius: 10px;
+        padding: 6px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
+
+    .tab-button {
+        flex: 1;
+        border: none;
+        padding: 13px;
+        border-radius: 8px;
+        background: transparent;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .tab-button.active {
+        background: #212529;
+        color: white;
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        margin-bottom: 18px;
+    }
+
+    .section-header {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 18px;
+    }
+
+    /* تب نتایج */
+
+    .result-header {
+        display: grid;
+        grid-template-columns: minmax(280px, 1fr) 100px 300px 45px;
+        gap: 10px;
+        margin-bottom: 8px;
+        font-size: 12px;
+        color: #6b7280;
+        font-weight: 700;
+        padding: 0 5px;
+    }
+
+    .result-row {
+        display: grid;
+        grid-template-columns: minmax(280px, 1fr) 100px 300px 45px;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .result-text {
+        width: 100%;
+        min-height: 58px;
+        resize: vertical;
+        border: 1px solid #dfe3e8;
+        border-radius: 8px;
+        padding: 10px;
+        direction: rtl;
+    }
+
+    .result-select {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid #dfe3e8;
+        border-radius: 8px;
+        padding: 8px;
+        direction: rtl;
+        background: white;
+    }
+
+    .list-button {
+        width: 42px;
+        height: 42px;
+        border-radius: 8px;
+        border: 1px solid #cfd4da;
+        background: white;
+        font-size: 20px;
+        cursor: pointer;
+    }
+
+    .list-button:hover {
+        background: #f1f3f5;
+    }
+
+    .result-note {
+        margin-top: 15px;
+        padding: 12px;
+        border-radius: 8px;
+        background: #f8f9fa;
+        border: 1px solid #e5e7eb;
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    /* تب شایستگی */
+
+    .competency-card {
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 15px;
+        background: white;
+    }
+
+    .competency-layout {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        gap: 20px;
+        align-items: start;
+    }
+
+    .competency-info {
+        border-left: 1px solid #e5e7eb;
+        padding-left: 15px;
+    }
+
+    .competency-title {
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.8;
+        margin-bottom: 14px;
+    }
+
+    .competency-select {
+        width: 100%;
+        min-height: 45px;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        padding: 8px;
+        background: white;
+        direction: rtl;
+    }
+
+    .behaviors-title {
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #495057;
+    }
+
+    .behavior-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .behavior-item {
+        border: 1px solid #edf0f2;
+        border-radius: 7px;
+        padding: 9px 10px;
+        background: transparent;
+        line-height: 1.8;
+        font-size: 13px;
+    }
+
+    .behavior-check {
+        display: none;
+        margin-left: 7px;
+    }
+
+    .behavior-item.show-check .behavior-check {
+        display: inline-block;
+    }
+
+    /* پنجره انتخاب شرح وظایف */
+
+    .duty-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 20px;
+    }
+
+    .duty-modal-backdrop.show {
+        display: flex;
+    }
+
+    .duty-modal {
+        width: min(650px, 100%);
+        max-height: 80vh;
+        overflow: auto;
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 15px 50px rgba(0,0,0,.2);
+    }
+
+    .duty-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 15px;
+    }
+
+    .duty-modal-header h4 {
+        margin: 0;
+    }
+
+    .duty-close {
+        border: none;
+        background: transparent;
+        font-size: 25px;
+        cursor: pointer;
+    }
+
+    .duty-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .duty-item {
+        text-align: right;
+        border: 1px solid #e1e5e9;
+        border-radius: 8px;
+        background: white;
+        padding: 11px;
+        cursor: pointer;
+        line-height: 1.8;
+        width: 100%;
+    }
+
+    .duty-item:hover {
+        background: #f0f2f4;
+    }
+
+    /* ریسپانسیو */
+
+    @@media (max-width: 1100px) {
+
+        .evaluation-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+            position: static;
+        }
+
+        .employee-info-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 800px) {
+
+        .result-header {
+            display: none;
+        }
+
+        .result-row {
+            grid-template-columns: 1fr;
+        }
+
+        .list-button {
+            width: 100%;
+        }
+
+        .competency-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .competency-info {
+            border-left: none;
+            border-bottom: 1px solid #e5e7eb;
+            padding-left: 0;
+            padding-bottom: 15px;
+        }
+
+        .behavior-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .employee-info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="evaluation-page">
+
+    <!-- عنوان -->
+    <div class="page-title">
+        <h2>فرم ارزیابی عملکرد کارکنان</h2>
+    </div>
+
+    <!-- مشخصات کارمند -->
+    <div class="employee-info">
+
+        <div class="employee-info-title">
+            مشخصات کارمند
+        </div>
+
+        <div class="employee-info-grid">
+
+            <div class="info-box">
+                <div class="info-label">کد پرسنلی</div>
+                <div class="info-value">
+                    @Model.Employee.PersonnelCode
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-label">نام و نام خانوادگی</div>
+                <div class="info-value">
+                    @Model.Employee.FirstName @Model.Employee.LastName
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-label">واحد سازمانی</div>
+                <div class="info-value">
+                    -
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-label">عنوان پست سازمانی</div>
+                <div class="info-value">
+                    @Model.Job.Title
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ساختار اصلی -->
+    <div class="evaluation-layout">
+
+        <!-- سایدبار سمت راست -->
+        <aside class="sidebar">
+
+            <div class="sidebar-title">
+                اطلاعات ارزیابی
+            </div>
+
+            <div class="summary-item">
+                <span class="summary-label">
+                    دوره ارزیابی
+                </span>
+
+                <div class="summary-value">
+                    ۱۴۰۵
+                </div>
+            </div>
+
+            <div class="summary-item">
+                <span class="summary-label">
+                    امتیاز ارزیابی شایستگی
+                </span>
+
+                <div id="competencyScore"
+                     class="summary-value">
+                    -
+                </div>
+            </div>
+
+            <div class="summary-item">
+                <span class="summary-label">
+                    امتیاز ارزیابی نتایج
+                </span>
+
+                <div id="resultScore"
+                     class="summary-value">
+                    -
+                </div>
+            </div>
+
+            <div class="summary-item">
+                <span class="summary-label">
+                    امتیاز نهایی عملکرد
+                </span>
+
+                <div id="finalScore"
+                     class="summary-value">
+                    -
+                </div>
+            </div>
+
+            <div class="summary-item">
+                <span class="summary-label">
+                    وضعیت نهایی عملکرد
+                </span>
+
+                <div id="finalGrade"
+                     class="summary-value grade-value">
+                    -
+                </div>
+            </div>
+
+            <div class="sidebar-buttons">
+
+                <button type="button"
+                        class="btn btn-primary"
+                        onclick="saveEvaluation()">
+                    ثبت ارزیابی
+                </button>
+
+                <a asp-controller="Employees"
+                   asp-action="Index"
+                   class="btn btn-secondary">
+                    انصراف
+                </a>
+
+                <button type="button"
+                        class="btn btn-warning"
+                        onclick="reevaluate()">
+                    ارزیابی مجدد
+                </button>
+
+                <button type="button"
+                        class="btn btn-outline-primary"
+                        onclick="showReport()">
+                    نمایش کارنامه
+                </button>
+
+            </div>
+
+            <div class="improvement-title">
+                مهم‌ترین پیشنهادات بهبود
+            </div>
+
+            <textarea id="improvementText"
+                      class="improvement-text"
+                      placeholder="مهم‌ترین پیشنهادات بهبود را وارد کنید..."></textarea>
+
+        </aside>
+
+        <!-- محتوای اصلی -->
+        <main class="main-content">
+
+            <!-- تب‌ها -->
+            <div class="tabs">
+
+                <button type="button"
+                        id="tabResultsButton"
+                        class="tab-button active"
+                        onclick="openTab('results')">
+                    ارزیابی نتایج
+                </button>
+
+                <button type="button"
+                        id="tabCompetenciesButton"
+                        class="tab-button"
+                        onclick="openTab('competencies')">
+                    ارزیابی شایستگی‌ها
+                </button>
+
+            </div>
+
+            <!-- تب نتایج -->
+            <section id="resultsTab"
+                     class="tab-content active">
+
+                <div class="section-card">
+
+                    <div class="section-header">
+                        ارزیابی نتایج
+                    </div>
+
+                    <div class="result-header">
+                        <div>
+                            وظیفه / اقدام / پروژه
+                        </div>
+
+                        <div>
+                            وزن
+                        </div>
+
+                        <div>
+                            وضعیت انجام
+                        </div>
+
+                        <div></div>
+                    </div>
+
+                    <div id="resultRows"></div>
+
+                   
+
+                </div>
+
+            </section>
+
+            <!-- تب شایستگی -->
+            <section id="competenciesTab"
+                     class="tab-content">
+
+                <div class="section-card">
+
+                    <div class="section-header">
+                        ارزیابی شایستگی‌های عمومی
+                    </div>
+
+                    <div id="competencyContainer"></div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+</div>
+
+<!-- پنجره انتخاب شرح وظایف -->
+
+<div id="dutyModalBackdrop"
+     class="duty-modal-backdrop">
+
+    <div class="duty-modal">
+
+        <div class="duty-modal-header">
+
+            <h4>
+                انتخاب از شرح وظایف
+            </h4>
+
+            <button type="button"
+                    class="duty-close"
+                    onclick="closeDutyModal()">
+                ×
+            </button>
+
+        </div>
+
+        <div class="duty-list"
+             id="dutyList">
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    /* =========================================================
+       وضعیت‌های ارزیابی نتایج
+       ========================================================= */
+
+    const resultStatuses = [
+
+        {
+            text: "انجام کلیه اقدامات لازم، به نحو مطلوب و قابل قبول",
+            score: 100
+        },
+
+        {
+            text: "انجام اکثر اقدامات مربوطه و تاحدودی قابل قبول",
+            score: 75
+        },
+
+        {
+            text: "انجام برخی از اقدامات لازم و نیازمند بهبود اساسی",
+            score: 50
+        },
+
+        {
+            text: "انجام اقدامات جزئی و غیر قابل قبول",
+            score: 25
+        },
+
+        {
+            text: "هیچ اقدامی انجام نشده است",
+            score: 0
+        }
+
+    ];
+
+
+    /* =========================================================
+       سطوح ارزیابی شایستگی
+       ========================================================= */
+
+    const competencyLevels = [
+
+        {
+            text: "فوق العاده",
+            score: 100
+        },
+
+        {
+            text: "فراتر از حد انتظار",
+            score: 95
+        },
+
+        {
+            text: "کمی فراتر از حد انتظار",
+            score: 90
+        },
+
+        {
+            text: "در حد انتظار",
+            score: 75
+        },
+
+        {
+            text: "کمی پایین تر از حد انتظار",
+            score: 65
+        },
+
+        {
+            text: "نیاز به تلاش بیشتر",
+            score: 50
+        },
+
+        {
+            text: "غیرقابل پذیرش",
+            score: 0
+        }
+
+    ];
+
+
+    /* =========================================================
+       شایستگی‌های سه سطح
+       ========================================================= */
+
+    const competencySets = {
+
+        managerial: [
+
+            {
+                title: "برنامه ریزی و سازماندهی",
+
+                behaviors: [
+
+                    "توانایی تدوین اهداف عملیاتی در راستای استراتژی تجاری شرکت در بخش مربوطه",
+
+                    "تعریف وظایف و نقاط کلیدی کار برای دستیابی به اهداف عملیاتی",
+
+                    "تقسیم درست وظایف",
+
+                    "اولویت‌بندی و زمان‌بندی فعالیت‌ها",
+
+                    "تفویض اختیار به موقع و لازم",
+
+                    "ایجاد هماهنگی بین افراد",
+
+                    "تخصیص بهینه منابع به وظایف و فعالیت‌ها جهت دستیابی به اهداف"
+
+                ]
+            },
+
+            {
+                title: "تصمیم گیری",
+
+                behaviors: [
+
+                    "توان درک و تجزیه و تحلیل مسائل و پیچیدگی‌های سازمان",
+
+                    "کل‌نگری و برخورداری از نگاه جامع به سازمان و فعالیت‌های آن",
+
+                    "ریسک‌پذیری و مدیریت ریسک",
+
+                    "مشارکت‌جویی از کارکنان در تصمیم‌گیری‌های سازمانی",
+
+                    "توانایی راهبری جلسات و مذاکرات",
+
+                    "جرأت و جسارت در اتخاذ تصمیمات صحیح و به هنگام"
+
+                ]
+            },
+
+            {
+                title: "هدایت و کنترل عملکرد",
+
+                behaviors: [
+
+                    "پیگیری کامل وظایف محوله به کارکنان تا حصول به نتایج نهایی",
+
+                    "نظارت بر پیشبرد مناسب و به موقع امور",
+
+                    "ارائه بازخوردهای مؤثر جهت بهبود مستمر عملکرد کارکنان",
+
+                    "توانایی جلب اعتماد و ایجاد انگیزه در کارکنان برای تلاش در جهت دستیابی به نتایج و اهداف تعیین شده"
+
+                ]
+            },
+
+            {
+                title: "کیفی سازی و توسعه کارکنان",
+
+                behaviors: [
+
+                    "شناسایی نقاط قوت و ضعف کارکنان زیرمجموعه و برنامه‌ریزی جهت توسعه آنها",
+
+                    "انتقال تجارب و دانش به کارکنان از طریق فعالیت‌های مربی‌گری و منتورینگ",
+
+                    "ایجاد فضای رشد و فرصت ارتقا و ترفیع",
+
+                    "تیم‌سازی و ایجاد فضای همکاری و مشارکت جهت پیشبرد امور",
+
+                    "ایجاد فضای نوآوری و خلاقیت",
+
+                    "اهتمام جهت جذب و به‌کارگیری نیروی انسانی متخصص"
+
+                ]
+            },
+
+            {
+                title: "مسئولیت پذیری و تعهد کاری",
+
+                behaviors: [
+
+                    "تلاش جهت تحقق اهداف سازمان با استانداردهای کمی و کیفی بالا",
+
+                    "تمایل برای قبول مسئولیت‌ها و وظایف کاری بیشتر و درگیر شدن با چالش‌ها",
+
+                    "تحمل ناملایمات ناشی از مسئولیت و انجام مسئولیت‌ها خارج از زمان کاری در صورت نیاز"
+
+                ]
+            },
+
+            {
+                title: "همکاری و تعامل موثر",
+
+                behaviors: [
+
+                    "تعامل و همکاری مناسب و سازنده با همکاران و ارباب رجوع",
+
+                    "برخورداری از قدرت متقاعدسازی و تفهیم همکاران و ارباب رجوع",
+
+                    "شبکه‌سازی و توانایی ایجاد ارتباطات رسمی و غیررسمی",
+
+                    "ثبات هیجانی و حفظ آرامش و رفتار معقول به هنگام بحران",
+
+                    "خوش‌خلقی و پرهیز از تندخویی در تعامل با همکاران",
+
+                    "کمک به رفع تضاد و تعارض در محیط کاری"
+
+                ]
+            },
+
+            {
+                title: "اخلاق حرفه ای",
+
+                behaviors: [
+
+                    "احترام به مقررات و ضوابط سازمانی و تبعیت از الزامات و استانداردهای سازمان",
+
+                    "امانت‌داری، رازداری و پرهیز از شایعه‌پراکنی در سازمان",
+
+                    "آراستگی در ظاهر و پوشش اداری",
+
+                    "رعایت حریم خصوصی و عدم مداخله در امور شخصی و وظایف کاری همکاران"
+
+                ]
+            },
+
+            {
+                title: "یادگیری و بهبود مستمر",
+
+                behaviors: [
+
+                    "شناخت صحیح فرایندهای کاری و بهبود مستمر روش‌های انجام کار",
+
+                    "به‌روزرسانی دانش و مهارت‌های جدید و مرتبط کاری و تلاش در جهت به‌کارگیری آنها",
+
+                    "خلاقیت و ارائه ایده‌های بدیع و ابتکاری در انجام بهتر وظایف",
+
+                    "انتقادپذیری، پرهیز از خودرأیی و استقبال و گشودگی در پذیرش نظرات جدید"
+
+                ]
+            }
+
+        ],
+
+
+        specialist: [
+
+            {
+                title: "کیفیت گرایی",
+
+                behaviors: [
+
+                    "دقت و تمرکز در انجام امور محوله",
+
+                    "رعایت استانداردها و قوانین مرتبط کاری",
+
+                    "ارائه گزارشات فنی و تخصصی مرتبط با حوزه فعالیت به نحو مطلوب"
+
+                ]
+            },
+
+            {
+                title: "مسئولیت پذیری",
+
+                behaviors: [
+
+                    "تمایل برای قبول مسئولیت‌ها و وظایف کاری بیشتر و درگیر شدن با چالش‌ها",
+
+                    "تحمل ناملایمات ناشی از مسئولیت و انجام مسئولیت‌ها خارج از زمان کاری در صورت نیاز"
+
+                ]
+            },
+
+            {
+                title: "نتیجه گرایی و حل مسئله",
+
+                behaviors: [
+
+                    "جدیت و پشتکار در انجام امور محوله",
+
+                    "پیشبرد به موقع کارهای محوله",
+
+                    "اولویت‌بندی کارها",
+
+                    "انجام تعهدات و پیگیری کامل وظایف محوله تا حصول به نتایج نهایی",
+
+                    "ارائه راه‌حل‌های مناسب جهت رفع موانع و مشکلات",
+
+                    "برخورداری از تفکر سیستمی و درنظر گرفتن جوانب و پیامدهای مختلف کار"
+
+                ]
+            },
+
+            {
+                title: "همکاری و تعامل موثر",
+
+                behaviors: [
+
+                    "تعامل و همکاری مناسب و سازنده در چارچوب وظایف با همکاران و ارباب رجوع",
+
+                    "برخورداری از قدرت متقاعدسازی و تفهیم همکاران و ارباب رجوع",
+
+                    "مشارکت در کار تیمی و فعالیت‌های گروهی",
+
+                    "رعایت سلسله مراتب سازمانی",
+
+                    "خوش‌خلقی و پرهیز از تندخویی در تعامل با همکاران",
+
+                    "کمک به رفع تضاد و تعارض در محیط کاری"
+
+                ]
+            },
+
+            {
+                title: "اخلاق حرفه ای",
+
+                behaviors: [
+
+                    "رعایت نظم و انضباط اداری",
+
+                    "احترام به مقررات و ضوابط سازمانی و تبعیت از الزامات و استانداردهای سازمان",
+
+                    "امانت‌داری، رازداری و پرهیز از شایعه‌پراکنی در سازمان",
+
+                    "آراستگی در ظاهر و پوشش اداری",
+
+                    "رعایت حریم خصوصی و عدم مداخله در امور شخصی و وظایف کاری همکاران"
+
+                ]
+            },
+
+            {
+                title: "یادگیری و بهبود مستمر",
+
+                behaviors: [
+
+                    "شناخت صحیح فرایندهای کاری و بهبود مستمر روش‌های انجام کار",
+
+                    "به‌روزرسانی دانش و مهارت‌های جدید و مرتبط کاری و تلاش در جهت به‌کارگیری آنها",
+
+                    "خلاقیت و ارائه ایده‌های بدیع و ابتکاری در انجام بهتر وظایف",
+
+                    "انتقادپذیری، پرهیز از خودرأیی و استقبال از ایده‌ها و نظرات جدید"
+
+                ]
+            }
+
+        ],
+
+
+        other: [
+
+            {
+                title: "تمرکز و دقت عمل",
+
+                behaviors: [
+
+                    "دقت و تمرکز در انجام امور محوله",
+
+                    "رعایت استانداردها و قوانین مرتبط کاری"
+
+                ]
+            },
+
+            {
+                title: "نتیجه گرایی و تعهد کاری",
+
+                behaviors: [
+
+                    "تحمل ناملایمات ناشی از مسئولیت و انجام مسئولیت‌ها خارج از زمان کاری در صورت نیاز",
+
+                    "انجام به موقع دستورات مافوق در زمینه امور محوله",
+
+                    "جدیت و پشتکار در انجام امور محوله",
+
+                    "انجام تعهدات و پیگیری کامل وظایف محوله تا حصول به نتایج نهایی"
+
+                ]
+            },
+
+            {
+                title: "نظم و انضباط",
+
+                behaviors: [
+
+                    "نظم در ورود و خروج",
+
+                    "هماهنگی قبل از مرخصی و مأموریت با مسئول مربوطه",
+
+                    "آراستگی در ظاهر و پوشش اداری",
+
+                    "مرتب نگه داشتن محیط کار"
+
+                ]
+            },
+
+            {
+                title: "همکاری و تعامل موثر",
+
+                behaviors: [
+
+                    "رعایت سلسله مراتب سازمانی",
+
+                    "خوش‌اخلاقی و صبوری با کارکنان و پیشگیری از عصبانیت",
+
+                    "تعامل و همکاری مناسب و سازنده در چارچوب وظایف با همکاران و ارباب رجوع",
+
+                    "احترام به همکاران و مافوق و استفاده از واژه‌های محترمانه و مؤدبانه",
+
+                    "پرهیز از شوخی‌های نامناسب"
+
+                ]
+            },
+
+            {
+                title: "اخلاق حرفه ای",
+
+                behaviors: [
+
+                    "احترام به مقررات و ضوابط سازمانی و تبعیت از الزامات و استانداردهای سازمان",
+
+                    "امانت‌داری، رازداری و پرهیز از شایعه‌پراکنی در سازمان",
+
+                    "رعایت حریم خصوصی و عدم مداخله در امور شخصی و وظایف کاری همکاران",
+
+                    "مراقبت و حفظ اموال در اختیار",
+
+                    "رعایت نظم و آرامش در محیط کار"
+
+                ]
+            },
+
+            {
+                title: "یادگیری و بهبود مستمر",
+
+                behaviors: [
+
+                    "شناخت صحیح فرایندهای کاری و بهبود مستمر روش‌های انجام کار",
+
+                    "ارائه پیشنهادات سازنده به مافوق جهت پیشبرد بهتر امور محوله",
+
+                    "انتقادپذیری، پرهیز از خودرأیی و استقبال از ایده‌ها و نظرات جدید"
+
+                ]
+            }
+
+        ]
+
+    };
+
+
+    /* =========================================================
+       تعیین سطح فعلی فرد
+       ========================================================= */
+
+    const employeeJobId = @Model.Job.Id;
+
+    function getCurrentLevel() {
+
+        if (employeeJobId === 1) {
+            return "managerial";
+        }
+
+        if (employeeJobId === 2 || employeeJobId === 3) {
+            return "specialist";
+        }
+
+        return "other";
+    }
+
+    const currentCompetencies =
+        competencySets[getCurrentLevel()];
+
+
+    /* =========================================================
+       ساخت ۷ ردیف نتایج
+       ========================================================= */
+
+    const resultsContainer =
+        document.getElementById("resultRows");
+
+    for (let i = 0; i < 7; i++) {
+
+        const row =
+            document.createElement("div");
+
+        row.className = "result-row";
+
+        row.innerHTML = `
+
+            <textarea
+                id="resultText_${i}"
+                class="result-text"
+                placeholder="وظیفه، اقدام یا پروژه مورد نظر را وارد کنید..."></textarea>
+
+            <select
+                id="resultWeight_${i}"
+                class="result-select"
+                onchange="calculateScores()">
+
+                <option value="">وزن</option>
+
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+
+            </select>
+
+            <select
+                id="resultStatus_${i}"
+                class="result-select"
+                onchange="calculateScores()">
+
+                <option value="">
+                    وضعیت انجام
+                </option>
+
+                ${resultStatuses.map((item, index) =>
+
+                    `<option value="${index}">
+                        ${item.text}
+                    </option>`
+
+                ).join("")}
+
+            </select>
+
+            <button
+                type="button"
+                class="list-button"
+                title="انتخاب از شرح وظایف"
+                onclick="openDutyModal(${i})">
+                ☰
+            </button>
+        `;
+
+        resultsContainer.appendChild(row);
+    }
+
+
+    /* =========================================================
+       ساخت شایستگی‌ها
+       ========================================================= */
+
+    const competencyContainer =
+        document.getElementById("competencyContainer");
+
+
+    currentCompetencies.forEach(
+        (competency, competencyIndex) => {
+
+            const card =
+                document.createElement("div");
+
+            card.className =
+                "competency-card";
+
+
+            let behaviorsHtml = "";
+
+
+            competency.behaviors.forEach(
+                (behavior, behaviorIndex) => {
+
+                    behaviorsHtml += `
+
+                        <div
+                            class="behavior-item"
+                            data-competency="${competencyIndex}">
+
+                            <input
+                                type="checkbox"
+                                class="behavior-check"
+                                data-competency="${competencyIndex}"
+                                data-behavior="${behaviorIndex}">
+
+                            <span>
+                                ${behavior}
+                            </span>
+
+                        </div>
+                    `;
+                }
+            );
+
+
+            card.innerHTML = `
+
+                <div class="competency-layout">
+
+                    <div class="competency-info">
+
+                        <div class="competency-title">
+                            ${competency.title}
+                        </div>
+
+                        <select
+                            id="competency_${competencyIndex}"
+                            class="competency-select"
+                            onchange="competencyChanged(${competencyIndex})">
+
+                            <option value="">
+                                انتخاب سطح ارزیابی
+                            </option>
+
+                            ${competencyLevels.map(
+                                (level, index) =>
+
+                                `<option value="${index}">
+                                    ${level.text}
+                                </option>`
+
+                            ).join("")}
+
+                        </select>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="behaviors-title">
+                            مصادیق رفتاری
+                        </div>
+
+                        <div class="behavior-grid">
+
+                            ${behaviorsHtml}
+
+                        </div>
+
+                    </div>
+
+                </div>
+            `;
+
+
+            competencyContainer.appendChild(card);
+
+        }
+    );
+
+
+    /* =========================================================
+       محاسبه امتیاز نتایج
+       ========================================================= */
+
+    function calculateResultScore() {
+
+        let weightedSum = 0;
+
+        let totalWeight = 0;
+
+
+        for (let i = 0; i < 7; i++) {
+
+            const weight =
+                parseInt(
+                    document.getElementById(
+                        `resultWeight_${i}`
+                    ).value
+                );
+
+
+            const statusIndex =
+                document.getElementById(
+                    `resultStatus_${i}`
+                ).value;
+
+
+            if (
+                !isNaN(weight) &&
+                statusIndex !== ""
+            ) {
+
+                const score =
+                    resultStatuses[
+                        parseInt(statusIndex)
+                    ].score;
+
+
+                weightedSum +=
+                    score * weight;
+
+
+                totalWeight +=
+                    weight;
+            }
+        }
+
+
+        if (totalWeight === 0) {
+            return null;
+        }
+
+
+        return Math.round(
+            weightedSum / totalWeight
+        );
+    }
+
+
+    /* =========================================================
+       محاسبه امتیاز شایستگی
+       ========================================================= */
+
+    function calculateCompetencyScore() {
+
+        let sum = 0;
+
+        let count = 0;
+
+
+        currentCompetencies.forEach(
+            (competency, index) => {
+
+                const selected =
+                    document.getElementById(
+                        `competency_${index}`
+                    ).value;
+
+
+                if (selected !== "") {
+
+                    const score =
+                        competencyLevels[
+                            parseInt(selected)
+                        ].score;
+
+
+                    sum += score;
+
+                    count++;
+                }
+            }
+        );
+
+
+        if (count === 0) {
+            return null;
+        }
+
+
+        return Math.round(
+            sum / count
+        );
+    }
+
+
+    /* =========================================================
+       Grade
+       ========================================================= */
+
+    function getGrade(score) {
+
+        if (score === null) {
+            return "-";
+        }
+
+        if (score >= 96) {
+            return "A+";
+        }
+
+        if (score >= 91) {
+            return "A";
+        }
+
+        if (score >= 76) {
+            return "B+";
+        }
+
+        if (score >= 66) {
+            return "B";
+        }
+
+        if (score >= 51) {
+            return "C";
+        }
+
+        if (score >= 31) {
+            return "D";
+        }
+
+        return "E";
+    }
+
+
+    /* =========================================================
+       محاسبه کلی امتیازها
+       ========================================================= */
+
+    function calculateScores() {
+
+        const resultScore =
+            calculateResultScore();
+
+
+        const competencyScore =
+            calculateCompetencyScore();
+
+
+        document.getElementById(
+            "resultScore"
+        ).innerText =
+
+            resultScore === null
+                ? "-"
+                : resultScore;
+
+
+        document.getElementById(
+            "competencyScore"
+        ).innerText =
+
+            competencyScore === null
+                ? "-"
+                : competencyScore;
+
+
+        if (
+            resultScore !== null &&
+            competencyScore !== null
+        ) {
+
+            const finalScore =
+                Math.round(
+                    (resultScore +
+                        competencyScore) / 2
+                );
+
+
+            document.getElementById(
+                "finalScore"
+            ).innerText = finalScore;
+
+
+            document.getElementById(
+                "finalGrade"
+            ).innerText =
+                getGrade(finalScore);
+
+        }
+        else {
+
+            document.getElementById(
+                "finalScore"
+            ).innerText = "-";
+
+
+            document.getElementById(
+                "finalGrade"
+            ).innerText = "-";
+        }
+
+    }
+
+
+    /* =========================================================
+       کنترل چک‌باکس‌های شواهد رفتاری
+       ========================================================= */
+
+    function competencyChanged(index) {
+
+        const selected =
+            document.getElementById(
+                `competency_${index}`
+            ).value;
+
+
+        const cards =
+            document.querySelectorAll(
+                `.behavior-item[data-competency="${index}"]`
+            );
+
+
+        const selectedIndex =
+            selected === ""
+                ? -1
+                : parseInt(selected);
+
+
+        /*
+           چک‌باکس برای:
+
+           دو سطح بالایی:
+           0 = فوق العاده
+           1 = فراتر از حد انتظار
+
+           دو سطح پایینی:
+           5 = نیاز به تلاش بیشتر
+           6 = غیرقابل پذیرش
+        */
+
+        const showChecks =
+            selectedIndex === 0 ||
+            selectedIndex === 1 ||
+            selectedIndex === 5 ||
+            selectedIndex === 6;
+
+
+        cards.forEach(card => {
+
+            const checkbox =
+                card.querySelector(
+                    ".behavior-check"
+                );
+
+
+            if (showChecks) {
+
+                card.classList.add(
+                    "show-check"
+                );
+
+            }
+            else {
+
+                card.classList.remove(
+                    "show-check"
+                );
+
+                checkbox.checked = false;
+            }
+
+        });
+
+
+        calculateScores();
+    }
+
+
+    /* =========================================================
+       فهرست شرح وظایف
+       ========================================================= */
+
+    const dutiesByJobId = {
+
+        1: [
+
+            "نمونه وظیفه مدیریتی شماره ۱",
+            "نمونه وظیفه مدیریتی شماره ۲",
+            "نمونه وظیفه مدیریتی شماره ۳",
+            "نمونه وظیفه مدیریتی شماره ۴"
+
+        ],
+
+        2: [
+
+            "نمونه وظیفه کارشناسی شماره ۱",
+            "نمونه وظیفه کارشناسی شماره ۲",
+            "نمونه وظیفه کارشناسی شماره ۳",
+            "نمونه وظیفه کارشناسی شماره ۴"
+
+        ],
+
+        3: [
+
+            "نمونه وظیفه کارشناسی منابع انسانی شماره ۱",
+            "نمونه وظیفه کارشناسی منابع انسانی شماره ۲",
+            "نمونه وظیفه کارشناسی منابع انسانی شماره ۳",
+            "نمونه وظیفه کارشناسی منابع انسانی شماره ۴"
+
+        ]
+
+    };
+
+
+    let activeResultRow = 0;
+
+
+    function openDutyModal(rowIndex) {
+
+        activeResultRow =
+            rowIndex;
+
+
+        const modal =
+            document.getElementById(
+                "dutyModalBackdrop"
+            );
+
+
+        const list =
+            document.getElementById(
+                "dutyList"
+            );
+
+
+        const duties =
+            dutiesByJobId[
+                employeeJobId
+            ] || [];
+
+
+        list.innerHTML = "";
+
+
+        if (duties.length === 0) {
+
+            list.innerHTML = `
+
+                <div class="duty-item">
+
+                    شرح وظایف این شغل هنوز در اطلاعات پایه ثبت نشده است.
+
+                </div>
+            `;
+
+        }
+        else {
+
+            duties.forEach(duty => {
+
+                const item =
+                    document.createElement(
+                        "button"
+                    );
+
+
+                item.type = "button";
+
+                item.className =
+                    "duty-item";
+
+                item.innerText =
+                    duty;
+
+
+                item.onclick = function () {
+
+                    document.getElementById(
+                        `resultText_${activeResultRow}`
+                    ).value = duty;
+
+
+                    closeDutyModal();
+                };
+
+
+                list.appendChild(item);
+
+            });
+
+        }
+
+
+        modal.classList.add("show");
+    }
+
+
+    function closeDutyModal() {
+
+        document
+            .getElementById(
+                "dutyModalBackdrop"
+            )
+            .classList.remove(
+                "show"
+            );
+    }
+
+
+    document
+        .getElementById(
+            "dutyModalBackdrop"
+        )
+        .addEventListener(
+            "click",
+            function(event) {
+
+                if (
+                    event.target === this
+                ) {
+
+                    closeDutyModal();
+
+                }
+
+            }
+        );
+
+
+    /* =========================================================
+       تب‌ها
+       ========================================================= */
+
+    function openTab(tabName) {
+
+        document
+            .getElementById(
+                "resultsTab"
+            )
+            .classList.remove(
+                "active"
+            );
+
+
+        document
+            .getElementById(
+                "competenciesTab"
+            )
+            .classList.remove(
+                "active"
+            );
+
+
+        document
+            .getElementById(
+                "tabResultsButton"
+            )
+            .classList.remove(
+                "active"
+            );
+
+
+        document
+            .getElementById(
+                "tabCompetenciesButton"
+            )
+            .classList.remove(
+                "active"
+            );
+
+
+        if (tabName === "results") {
+
+            document
+                .getElementById(
+                    "resultsTab"
+                )
+                .classList.add(
+                    "active"
+                );
+
+
+            document
+                .getElementById(
+                    "tabResultsButton"
+                )
+                .classList.add(
+                    "active"
+                );
+
+        }
+        else {
+
+            document
+                .getElementById(
+                    "competenciesTab"
+                )
+                .classList.add(
+                    "active"
+                );
+
+
+            document
+                .getElementById(
+                    "tabCompetenciesButton"
+                )
+                .classList.add(
+                    "active"
+                );
+        }
+
+    }
+
+
+    /* =========================================================
+       ثبت ارزیابی - فعلاً آزمایشی
+       ========================================================= */
+
+    function saveEvaluation() {
+
+    const errors = [];
+
+    /* =========================================================
+       1. کنترل کامل بودن ارزیابی شایستگی‌ها
+       ========================================================= */
+
+    currentCompetencies.forEach((competency, index) => {
+
+        const selected =
+            document.getElementById(
+                `competency_${index}`
+            ).value;
+
+        // هیچ سطحی انتخاب نشده
+        if (selected === "") {
+
+            errors.push(
+                `شایستگی «${competency.title}» ارزیابی نشده است.`
+            );
+
+            return;
+        }
+
+        const selectedIndex =
+            parseInt(selected);
+
+        /*
+           برای دو سطح اول و دو سطح آخر،
+           حداقل یک مصداق رفتاری باید انتخاب شود.
+        */
+
+        const requiresBehavior =
+            selectedIndex === 0 ||
+            selectedIndex === 1 ||
+            selectedIndex === 5 ||
+            selectedIndex === 6;
+
+
+        if (requiresBehavior) {
+
+            const checkedBehaviors =
+                document.querySelectorAll(
+                    `.behavior-check[data-competency="${index}"]:checked`
+                );
+
+
+            if (checkedBehaviors.length === 0) {
+
+                errors.push(
+                    `برای شایستگی «${competency.title}» حداقل یک مصداق رفتاری باید انتخاب شود.`
+                );
+            }
+        }
+
+    });
+
+
+    /* =========================================================
+       2. کنترل وظایف / پروژه‌ها / اقدامات
+       ========================================================= */
+
+    let enteredTasks = 0;
+
+    for (let i = 0; i < 7; i++) {
+
+        const text =
+            document.getElementById(
+                `resultText_${i}`
+            ).value.trim();
+
+
+        const weight =
+            document.getElementById(
+                `resultWeight_${i}`
+            ).value;
+
+
+        const status =
+            document.getElementById(
+                `resultStatus_${i}`
+            ).value;
+
+
+        /*
+           اگر وظیفه درج شده باشد،
+           باید هم وزن و هم وضعیت داشته باشد.
+        */
+
+        if (text !== "") {
+
+            enteredTasks++;
+
+
+            if (weight === "") {
+
+                errors.push(
+                    `وظیفه ردیف ${i + 1} دارای وزن نیست.`
+                );
+            }
+
+
+            if (status === "") {
+
+                errors.push(
+                    `وضعیت انجام وظیفه ردیف ${i + 1} مشخص نشده است.`
+                );
+            }
+        }
+
+
+        /*
+           اگر وزن یا وضعیت وارد شده ولی عنوان وظیفه خالی باشد،
+           این ردیف هم ناقص محسوب می‌شود.
+        */
+
+        if (
+            text === "" &&
+            (
+                weight !== "" ||
+                status !== ""
+            )
+        ) {
+
+            errors.push(
+                `ردیف ${i + 1} دارای اطلاعات ناقص است؛ عنوان وظیفه، اقدام یا پروژه را وارد کنید.`
+            );
+        }
+
+    }
+
+
+    /* =========================================================
+       3. حداقل سه وظیفه
+       ========================================================= */
+
+    if (enteredTasks < 3) {
+
+        errors.push(
+            `حداقل ۳ وظیفه، اقدام یا پروژه باید در بخش نتایج درج شود.`
+        );
+    }
+
+
+    /* =========================================================
+       4. نمایش خطاها
+       ========================================================= */
+
+    if (errors.length > 0) {
+
+        alert(
+            "امکان ثبت ارزیابی وجود ندارد:\n\n" +
+            errors
+                .map((error, index) =>
+                    `${index + 1}. ${error}`
+                )
+                .join("\n")
+        );
+
+        return;
+    }
+
+
+    /* =========================================================
+       5. محاسبه امتیازها
+       ========================================================= */
+
+    calculateScores();
+
+
+    const resultScore =
+        calculateResultScore();
+
+
+    const competencyScore =
+        calculateCompetencyScore();
+
+
+    const finalScore =
+        Math.round(
+            (resultScore +
+                competencyScore) / 2
+        );
+
+
+    const grade =
+        getGrade(finalScore);
+
+
+    /* =========================================================
+       6. ثبت موفق - فعلاً آزمایشی
+       ========================================================= */
+
+    alert(
+        "ثبت ارزیابی با موفقیت انجام شد.\n\n" +
+
+        "امتیاز نتایج: " +
+        resultScore +
+        "\n" +
+
+        "امتیاز شایستگی: " +
+        competencyScore +
+        "\n" +
+
+        "امتیاز نهایی عملکرد: " +
+        finalScore +
+        "\n" +
+
+        "وضعیت نهایی عملکرد: " +
+        grade
+    );
+}
+
+
+    /* =========================================================
+       ارزیابی مجدد
+       ========================================================= */
+
+    function reevaluate() {
+
+        const confirmed =
+            confirm(
+                "آیا می‌خواهید اطلاعات ارزیابی دوباره پاک شود؟"
+            );
+
+
+        if (!confirmed) {
+            return;
+        }
+
+
+        for (let i = 0; i < 7; i++) {
+
+            document.getElementById(
+                `resultText_${i}`
+            ).value = "";
+
+
+            document.getElementById(
+                `resultWeight_${i}`
+            ).value = "";
+
+
+            document.getElementById(
+                `resultStatus_${i}`
+            ).value = "";
+        }
+
+
+        currentCompetencies.forEach(
+            (competency, index) => {
+
+                document.getElementById(
+                    `competency_${index}`
+                ).value = "";
+
+            }
+        );
+
+
+        document
+            .querySelectorAll(
+                ".behavior-check"
+            )
+            .forEach(check => {
+
+                check.checked = false;
+
+            });
+
+
+        document
+            .querySelectorAll(
+                ".behavior-item"
+            )
+            .forEach(item => {
+
+                item.classList.remove(
+                    "show-check"
+                );
+
+            });
+
+
+        document.getElementById(
+            "improvementText"
+        ).value = "";
+
+
+        calculateScores();
+    }
+
+
+    /* =========================================================
+       نمایش کارنامه - فعلاً آزمایشی
+       ========================================================= */
+
+    function showReport() {
+
+    calculateScores();
+
+    const resultScore = calculateResultScore();
+    const competencyScore = calculateCompetencyScore();
+
+    if (resultScore === null) {
+        alert("برای نمایش کارنامه، حداقل یک نتیجه باید ارزیابی شده باشد.");
+        return;
+    }
+
+    if (competencyScore === null) {
+        alert("برای نمایش کارنامه، تمام شایستگی‌ها باید ارزیابی شده باشند.");
+        return;
+    }
+
+    const finalScore =
+        Math.round((resultScore + competencyScore) / 2);
+
+    const grade = getGrade(finalScore);
+
+    const employeeCode =
+    @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Employee.PersonnelCode));
+
+const employeeName =
+    @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        Model.Employee.FirstName + " " + Model.Employee.LastName
+    ));
+
+const jobTitle =
+    @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Job.Title));
+
+const evaluatorName =
+    @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        User.Identity?.Name ?? ""
+    ));
+
+    const evaluationPeriod = "۱۴۰۵";
+
+    /* =========================================================
+       آماده‌سازی نتایج
+       ========================================================= */
+
+    let resultsHtml = "";
+
+    for (let i = 0; i < 7; i++) {
+
+        const text =
+            document.getElementById(`resultText_${i}`).value.trim();
+
+        const weight =
+            document.getElementById(`resultWeight_${i}`).value;
+
+        const statusIndex =
+            document.getElementById(`resultStatus_${i}`).value;
+
+        if (text !== "") {
+
+            let statusScore = "-";
+
+            if (statusIndex !== "") {
+                statusScore =
+                    resultStatuses[parseInt(statusIndex)].score;
+            }
+
+            resultsHtml += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td class="result-task">${escapeHtml(text)}</td>
+                    <td>${weight || "-"}</td>
+                    <td>${statusScore}</td>
+                </tr>
+            `;
+        }
+    }
+
+    /* =========================================================
+       آماده‌سازی شایستگی‌ها
+       ========================================================= */
+
+    let competencyRows = [];
+
+    currentCompetencies.forEach((competency, index) => {
+
+        const selected =
+            document.getElementById(`competency_${index}`).value;
+
+        let levelText = "-";
+        let score = 0;
+        let selectedLevel = -1;
+
+        if (selected !== "") {
+
+            selectedLevel = parseInt(selected);
+
+            levelText =
+                competencyLevels[selectedLevel].text;
+
+            score =
+                competencyLevels[selectedLevel].score;
+        }
+
+        let selectedBehaviors = [];
+
+        document
+            .querySelectorAll(
+                `.behavior-check[data-competency="${index}"]:checked`
+            )
+            .forEach(check => {
+
+                const behaviorIndex =
+                    parseInt(check.dataset.behavior);
+
+                selectedBehaviors.push(
+                    competency.behaviors[behaviorIndex]
+                );
+            });
+
+        competencyRows.push({
+            title: competency.title,
+            levelText: levelText,
+            score: score,
+            levelIndex: selectedLevel,
+            behaviors: competency.behaviors,
+            selectedBehaviors: selectedBehaviors
+        });
+    });
+
+    /* =========================================================
+       تقسیم شایستگی‌ها بین دو صفحه
+       ========================================================= */
+
+    const middle =
+        Math.ceil(competencyRows.length / 2);
+
+    const firstPageCompetencies =
+        competencyRows.slice(0, middle);
+
+    const secondPageCompetencies =
+        competencyRows.slice(middle);
+
+
+    function createCompetencyHtml(items) {
+
+        let html = "";
+
+        items.forEach(item => {
+
+            let behaviorsHtml = "";
+
+            item.behaviors.forEach(behavior => {
+
+                const isSelected =
+                    item.selectedBehaviors.includes(behavior);
+
+                behaviorsHtml += `
+                    <div class="behavior">
+                        ${
+                            isSelected
+                                ? `<span class="selected-mark">✓</span>`
+                                : ""
+                        }
+                        ${escapeHtml(behavior)}
+                    </div>
+                `;
+            });
+
+            html += `
+                <div class="competency-box">
+
+                    <div class="competency-title">
+                        ${escapeHtml(item.title)}
+                    </div>
+
+                    <div class="competency-content">
+
+                        <div class="competency-level">
+                            <div class="level-label">
+                                وضعیت ارزیابی
+                            </div>
+
+                            <div class="level-value">
+                                ${escapeHtml(item.levelText)}
+                            </div>
+                        </div>
+
+                        <div class="behaviors">
+
+                            <div class="behaviors-title">
+                                مصادیق رفتاری
+                            </div>
+
+                            <div class="behavior-grid">
+                                ${behaviorsHtml}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            `;
+        });
+
+        return html;
+    }
+
+
+    /* =========================================================
+       مصادیق مثبت و قابل بهبود
+       ========================================================= */
+
+    let positiveBehaviors = [];
+    let improvementBehaviors = [];
+
+    competencyRows.forEach(item => {
+
+        if (
+            item.levelIndex === 0 ||
+            item.levelIndex === 1
+        ) {
+
+            positiveBehaviors.push(
+                ...item.selectedBehaviors
+            );
+
+        }
+
+        if (
+            item.levelIndex === 5 ||
+            item.levelIndex === 6
+        ) {
+
+            improvementBehaviors.push(
+                ...item.selectedBehaviors
+            );
+        }
+    });
+
+
+    function createBulletList(items) {
+
+        if (items.length === 0) {
+
+            return `
+                <div class="empty-message">
+                    موردی ثبت نشده است
+                </div>
+            `;
+        }
+
+        return items.map(item => `
+            <div class="bullet-item">
+                • ${escapeHtml(item)}
+            </div>
+        `).join("");
+    }
+
+
+    /* =========================================================
+       داده نمودار راداری
+       ========================================================= */
+
+    const radarItems =
+        competencyRows.map(item => ({
+            title: item.title,
+            score: item.score
+        }));
+
+
+    function createRadarChart(items) {
+
+        const width = 390;
+        const height = 300;
+
+        const centerX = 195;
+        const centerY = 150;
+
+        const radius = 105;
+
+        const count = items.length;
+
+        if (count === 0) {
+            return "";
+        }
+
+        function point(index, r) {
+
+            const angle =
+                (-Math.PI / 2) +
+                ((Math.PI * 2 * index) / count);
+
+            return {
+                x: centerX + Math.cos(angle) * r,
+                y: centerY + Math.sin(angle) * r
+            };
+        }
+
+
+        let gridHtml = "";
+
+        const levels = [20, 40, 60, 80, 100];
+
+        levels.forEach(level => {
+
+            const points = [];
+
+            for (let i = 0; i < count; i++) {
+
+                const p =
+                    point(
+                        i,
+                        radius * level / 100
+                    );
+
+                points.push(
+                    `${p.x},${p.y}`
+                );
+            }
+
+            gridHtml += `
+                <polygon
+                    points="${points.join(" ")}"
+                    fill="none"
+                    stroke="#b8bec5"
+                    stroke-width="1">
+                </polygon>
+            `;
+        });
+
+
+        let axisHtml = "";
+        let labelHtml = "";
+
+        items.forEach((item, index) => {
+
+            const outer =
+                point(index, radius);
+
+            const label =
+                point(index, radius + 35);
+
+            axisHtml += `
+                <line
+                    x1="${centerX}"
+                    y1="${centerY}"
+                    x2="${outer.x}"
+                    y2="${outer.y}"
+                    stroke="#c8ccd1"
+                    stroke-width="1">
+                </line>
+            `;
+
+            labelHtml += `
+                <text
+                    x="${label.x}"
+                    y="${label.y}"
+                    text-anchor="middle"
+                    font-size="10"
+                    fill="#333">
+                    ${escapeHtml(shortenText(item.title, 18))}
+                </text>
+            `;
+        });
+
+
+        const valuePoints = [];
+
+        items.forEach((item, index) => {
+
+            const value =
+                Math.max(0, item.score);
+
+            const p =
+                point(
+                    index,
+                    radius * value / 100
+                );
+
+            valuePoints.push(
+                `${p.x},${p.y}`
+            );
+        });
+
+
+        let dotsHtml = "";
+
+        items.forEach((item, index) => {
+
+            const p =
+                point(
+                    index,
+                    radius * item.score / 100
+                );
+
+            dotsHtml += `
+                <circle
+                    cx="${p.x}"
+                    cy="${p.y}"
+                    r="4"
+                    fill="#f28c28">
+                </circle>
+            `;
+        });
+
+
+        return `
+            <svg
+                width="${width}"
+                height="${height}"
+                viewBox="0 0 ${width} ${height}">
+
+                ${gridHtml}
+
+                ${axisHtml}
+
+                <polygon
+                    points="${valuePoints.join(" ")}"
+                    fill="rgba(242,140,40,.18)"
+                    stroke="#f28c28"
+                    stroke-width="2">
+                </polygon>
+
+                ${dotsHtml}
+
+                ${labelHtml}
+
+            </svg>
+        `;
+    }
+
+
+    /* =========================================================
+       ساخت کارنامه
+       ========================================================= */
+
+    const reportWindow =
+        window.open("", "_blank");
+
+    if (!reportWindow) {
+
+        alert(
+            "مرورگر اجازه باز کردن صفحه جدید را نداده است. لطفاً Popup را برای این سایت فعال کنید."
+        );
+
+        return;
+    }
+
+
+    reportWindow.document.write(`
+
+<!DOCTYPE html>
+
+<html lang="fa" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+کارنامه ارزیابی عملکرد - ${employeeName}
+</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+
+    margin: 0;
+
+    background: #d9d9d9;
+
+    font-family:
+        Tahoma,
+        Arial,
+        sans-serif;
+
+    direction: rtl;
+
+    color: #111;
+}
+
+.page {
+
+    width: 210mm;
+
+    min-height: 297mm;
+
+    background: white;
+
+    margin: 10mm auto;
+
+    padding: 8mm;
+
+    position: relative;
+
+    page-break-after: always;
+
+    overflow: hidden;
+}
+
+.page:last-child {
+
+    page-break-after: auto;
+}
+
+.report-title {
+
+    text-align: center;
+
+    font-size: 20px;
+
+    font-weight: bold;
+
+    margin-bottom: 12px;
+}
+
+.info-table,
+.score-table,
+.result-table,
+.competency-table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    margin-bottom: 10px;
+}
+
+.info-table td,
+.score-table td,
+.score-table th,
+.result-table td,
+.result-table th,
+.competency-table td,
+.competency-table th {
+
+    border: 1px solid #222;
+
+    padding: 6px;
+
+    font-size: 11px;
+
+    vertical-align: middle;
+}
+
+.info-label,
+.score-label {
+
+    background: #e4e8ee;
+
+    font-weight: bold;
+
+    width: 15%;
+
+    text-align: center;
+}
+
+.info-value {
+
+    width: 18%;
+
+    text-align: center;
+}
+
+.score-table th {
+
+    background: #d9e0eb;
+
+    font-weight: bold;
+
+    text-align: center;
+}
+
+.score-number {
+
+    font-size: 15px;
+
+    font-weight: bold;
+
+    text-align: center;
+}
+
+.grade {
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+    text-align: center;
+}
+
+.section-title {
+
+    background: #d9dcef;
+
+    border: 1px solid #222;
+
+    text-align: center;
+
+    font-weight: bold;
+
+    font-size: 13px;
+
+    padding: 6px;
+
+    margin-top: 8px;
+}
+
+.result-table th {
+
+    background: #d9dcef;
+
+    text-align: center;
+}
+
+.result-table td {
+
+    height: 32px;
+
+    text-align: center;
+}
+
+.result-task {
+
+    text-align: right !important;
+
+    line-height: 1.5;
+}
+
+.competency-box {
+
+    border: 1px solid #222;
+
+    margin-top: 7px;
+
+    page-break-inside: avoid;
+}
+
+.competency-title {
+
+    background: #f0f0f0;
+
+    border-bottom: 1px solid #222;
+
+    padding: 6px;
+
+    font-weight: bold;
+
+    font-size: 13px;
+}
+
+.competency-content {
+
+    display: grid;
+
+    grid-template-columns: 125px 1fr;
+
+    min-height: 65px;
+}
+
+.competency-level {
+
+    border-left: 1px solid #222;
+
+    text-align: center;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    padding: 5px;
+}
+
+.level-label {
+
+    font-size: 10px;
+
+    margin-bottom: 5px;
+
+    font-weight: bold;
+}
+
+.level-value {
+
+    font-size: 12px;
+
+    font-weight: bold;
+}
+
+.behaviors {
+
+    padding: 6px;
+}
+
+.behaviors-title {
+
+    font-size: 10px;
+
+    font-weight: bold;
+
+    margin-bottom: 4px;
+}
+
+.behavior-grid {
+
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 3px 12px;
+}
+
+.behavior {
+
+    font-size: 9px;
+
+    line-height: 1.55;
+
+    text-align: right;
+}
+
+.selected-mark {
+
+    display: inline-block;
+
+    font-weight: bold;
+
+    margin-left: 4px;
+}
+
+.summary-grid {
+
+    display: grid;
+
+    grid-template-columns: 1fr 1fr 1fr;
+
+    border: 1px solid #222;
+
+    margin-top: 8px;
+}
+
+.summary-box {
+
+    min-height: 165px;
+
+    padding: 8px;
+
+    border-left: 1px solid #222;
+}
+
+.summary-box:last-child {
+
+    border-left: none;
+}
+
+.summary-header {
+
+    font-weight: bold;
+
+    text-align: center;
+
+    font-size: 11px;
+
+    margin-bottom: 6px;
+}
+
+.bullet-item {
+
+    font-size: 9px;
+
+    line-height: 1.7;
+
+    margin-bottom: 3px;
+
+    text-align: right;
+}
+
+.empty-message {
+
+    color: #777;
+
+    font-size: 9px;
+
+    text-align: center;
+
+    margin-top: 20px;
+}
+
+.improvement-box {
+
+    border: 1px solid #222;
+
+    margin-top: 8px;
+
+    min-height: 80px;
+
+    display: grid;
+
+    grid-template-columns: 125px 1fr;
+}
+
+.improvement-label {
+
+    background: #d9dcef;
+
+    border-left: 1px solid #222;
+
+    font-weight: bold;
+
+    font-size: 11px;
+
+    padding: 8px;
+
+    text-align: center;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+}
+
+.improvement-text {
+
+    padding: 8px;
+
+    font-size: 10px;
+
+    line-height: 1.8;
+
+    white-space: pre-wrap;
+}
+
+.radar-title {
+
+    text-align: center;
+
+    font-size: 11px;
+
+    font-weight: bold;
+
+    margin-bottom: 2px;
+}
+
+.radar {
+
+    text-align: center;
+
+    margin-top: 5px;
+}
+
+.footer {
+
+    position: absolute;
+
+    bottom: 5mm;
+
+    left: 8mm;
+
+    right: 8mm;
+
+    text-align: center;
+
+    font-size: 8px;
+
+    color: #777;
+}
+
+@@media print {
+
+    @@page {
+
+        size: A4;
+
+        margin: 0;
+    }
+
+    body {
+
+        background: white;
+    }
+
+    .page {
+
+        margin: 0;
+
+        width: 210mm;
+
+        min-height: 297mm;
+
+        box-shadow: none;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<!-- =======================================================
+     صفحه اول
+     ======================================================= -->
+
+<div class="page">
+
+    <div class="report-title">
+        کارنامه ارزیابی عملکرد کارکنان
+    </div>
+
+
+    <table class="info-table">
+
+        <tr>
+
+            <td class="info-label">
+                ارزیابی‌شونده
+            </td>
+
+            <td class="info-value">
+                ${escapeHtml(employeeName)}
+            </td>
+
+            <td class="info-label">
+                شماره پرسنلی
+            </td>
+
+            <td class="info-value">
+                ${escapeHtml(employeeCode)}
+            </td>
+
+            <td class="info-label">
+                دوره ارزیابی
+            </td>
+
+            <td class="info-value">
+                ${evaluationPeriod}
+            </td>
+
+        </tr>
+
+
+        <tr>
+
+            <td class="info-label">
+                عنوان پست سازمانی
+            </td>
+
+            <td class="info-value">
+                ${escapeHtml(jobTitle)}
+            </td>
+
+            <td class="info-label">
+                واحد سازمانی
+            </td>
+
+            <td class="info-value">
+                -
+            </td>
+
+            <td class="info-label">
+                ارزیاب
+            </td>
+
+            <td class="info-value">
+                ${escapeHtml(evaluatorName)}
+            </td>
+
+        </tr>
+
+    </table>
+
+
+    <table class="score-table">
+
+        <tr>
+
+            <th>
+                امتیاز ارزیابی نتایج
+            </th>
+
+            <th>
+                امتیاز ارزیابی شایستگی
+            </th>
+
+            <th>
+                امتیاز نهایی عملکرد
+            </th>
+
+            <th>
+                وضعیت نهایی عملکرد
+            </th>
+
+        </tr>
+
+        <tr>
+
+            <td class="score-number">
+                ${resultScore}
+            </td>
+
+            <td class="score-number">
+                ${competencyScore}
+            </td>
+
+            <td class="score-number">
+                ${finalScore}
+            </td>
+
+            <td class="grade">
+                ${grade}
+            </td>
+
+        </tr>
+
+    </table>
+
+
+    <div class="section-title">
+        ارزیابی نتایج
+    </div>
+
+
+    <table class="result-table">
+
+        <thead>
+
+            <tr>
+
+                <th style="width:7%">
+                    ردیف
+                </th>
+
+                <th>
+                    مهم‌ترین اقدامات، فعالیت‌ها و پروژه‌ها
+                </th>
+
+                <th style="width:12%">
+                    ضریب اهمیت
+                </th>
+
+                <th style="width:16%">
+                    وضعیت انجام
+                </th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            ${resultsHtml}
+
+        </tbody>
+
+    </table>
+
+
+    <div class="section-title">
+        ارزیابی شایستگی‌ها
+    </div>
+
+    ${createCompetencyHtml(firstPageCompetencies)}
+
+
+    <div class="footer">
+        کارنامه ارزیابی عملکرد - ${escapeHtml(employeeName)}
+    </div>
+
+</div>
+
+
+<!-- =======================================================
+     صفحه دوم
+     ======================================================= -->
+
+<div class="page">
+
+    <div class="report-title">
+        کارنامه ارزیابی عملکرد
+    </div>
+
+
+    <div class="section-title">
+        ادامه ارزیابی شایستگی‌ها
+    </div>
+
+
+    ${createCompetencyHtml(secondPageCompetencies)}
+
+
+    <div class="summary-grid">
+
+        <div class="summary-box">
+
+            <div class="summary-header">
+                مهم‌ترین مصادیق رفتاری مثبت
+            </div>
+
+            ${createBulletList(positiveBehaviors)}
+
+        </div>
+
+
+        <div class="summary-box">
+
+            <div class="summary-header">
+                مهم‌ترین مصادیق رفتاری قابل بهبود
+            </div>
+
+            ${createBulletList(improvementBehaviors)}
+
+        </div>
+
+
+        <div class="summary-box">
+
+            <div class="radar-title">
+                وضعیت ارزیابی شایستگی
+            </div>
+
+            <div class="radar">
+
+                ${createRadarChart(radarItems)}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="improvement-box">
+
+        <div class="improvement-label">
+
+            مهم‌ترین پیشنهادات جهت بهبود
+
+        </div>
+
+        <div class="improvement-text">
+
+            ${escapeHtml(
+                document.getElementById("improvementText").value.trim()
+            )}
+
+        </div>
+
+    </div>
+
+
+    <div class="footer">
+        کارنامه ارزیابی عملکرد - ${escapeHtml(employeeName)}
+    </div>
+
+</div>
+
+
+</body>
+
+</html>
+
+`);
+
+
+    reportWindow.document.close();
+}
+
+
+/* =========================================================
+   توابع کمکی کارنامه
+   ========================================================= */
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+function shortenText(text, maxLength) {
+
+    if (text.length <= maxLength) {
+        return text;
+    }
+
+    return text.substring(0, maxLength) + "…";
+}
+
+
+    /* =========================================================
+       محاسبه اولیه
+       ========================================================= */
+
+    calculateScores();
+
+</script>

@@ -1,15 +1,18 @@
 using EvaluationSystem.Models;
 using EvaluationSystem.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EvaluationSystem.Controllers
 {
+    [Authorize]
     public class EmployeesController : Controller
     {
         public IActionResult Index()
         {
-            // ارزیاب فعلی - فعلاً آزمایشی
-            string currentEvaluatorCode = "1001";
+            // دریافت کد ارزیاب از کاربر وارد شده
+            string currentEvaluatorCode =
+                User.FindFirst("EvaluatorCode")?.Value ?? "";
 
             // لیست مشاغل - فعلاً آزمایشی
             var jobs = new List<Job>
@@ -19,13 +22,11 @@ namespace EvaluationSystem.Controllers
                     Id = 1,
                     Title = "مدیر منابع انسانی"
                 },
-
                 new Job
                 {
                     Id = 2,
                     Title = "کارشناس مالی"
                 },
-
                 new Job
                 {
                     Id = 3,
@@ -43,7 +44,6 @@ namespace EvaluationSystem.Controllers
                     Title = "مسئولیت‌پذیری",
                     Description = "میزان مسئولیت‌پذیری در انجام وظایف"
                 },
-
                 new EvaluationCriterion
                 {
                     Id = 2,
@@ -51,7 +51,6 @@ namespace EvaluationSystem.Controllers
                     Title = "دقت در انجام کار",
                     Description = "میزان دقت و توجه به جزئیات"
                 },
-
                 new EvaluationCriterion
                 {
                     Id = 3,
@@ -59,7 +58,6 @@ namespace EvaluationSystem.Controllers
                     Title = "کار تیمی",
                     Description = "توانایی همکاری و تعامل با سایر همکاران"
                 },
-
                 new EvaluationCriterion
                 {
                     Id = 4,
@@ -67,7 +65,6 @@ namespace EvaluationSystem.Controllers
                     Title = "مسئولیت‌پذیری",
                     Description = "میزان مسئولیت‌پذیری در انجام وظایف"
                 },
-
                 new EvaluationCriterion
                 {
                     Id = 5,
@@ -88,7 +85,6 @@ namespace EvaluationSystem.Controllers
                     JobId = 1,
                     EvaluatorCode = null
                 },
-
                 new Employee
                 {
                     PersonnelCode = "1002",
@@ -97,7 +93,6 @@ namespace EvaluationSystem.Controllers
                     JobId = 2,
                     EvaluatorCode = "1001"
                 },
-
                 new Employee
                 {
                     PersonnelCode = "1003",
@@ -106,7 +101,6 @@ namespace EvaluationSystem.Controllers
                     JobId = 3,
                     EvaluatorCode = "1001"
                 },
-
                 new Employee
                 {
                     PersonnelCode = "1004",
@@ -117,12 +111,11 @@ namespace EvaluationSystem.Controllers
                 }
             };
 
-            // فقط کارکنان تحت ارزیابی ارزیاب فعلی
+            // فقط کارکنان مربوط به ارزیاب فعلی
             var myEmployees = employees
                 .Where(e => e.EvaluatorCode == currentEvaluatorCode)
                 .ToList();
 
-            // آماده کردن اطلاعات برای View
             var model = new EmployeeListViewModel
             {
                 Employees = myEmployees,
@@ -133,10 +126,13 @@ namespace EvaluationSystem.Controllers
             return View(model);
         }
 
-
         public IActionResult Evaluate(string id)
         {
-            // لیست مشاغل - فعلاً آزمایشی
+            // کد ارزیاب وارد شده
+            string currentEvaluatorCode =
+                User.FindFirst("EvaluatorCode")?.Value ?? "";
+
+            // لیست مشاغل
             var jobs = new List<Job>
             {
                 new Job
@@ -144,13 +140,11 @@ namespace EvaluationSystem.Controllers
                     Id = 1,
                     Title = "مدیر منابع انسانی"
                 },
-
                 new Job
                 {
                     Id = 2,
                     Title = "کارشناس مالی"
                 },
-
                 new Job
                 {
                     Id = 3,
@@ -158,7 +152,7 @@ namespace EvaluationSystem.Controllers
                 }
             };
 
-            // لیست معیارها - فعلاً آزمایشی
+            // لیست معیارها
             var criteria = new List<EvaluationCriterion>
             {
                 new EvaluationCriterion
@@ -168,7 +162,6 @@ namespace EvaluationSystem.Controllers
                     Title = "مسئولیت‌پذیری",
                     Description = "میزان مسئولیت‌پذیری در انجام وظایف"
                 },
-
                 new EvaluationCriterion
                 {
                     Id = 2,
@@ -176,7 +169,6 @@ namespace EvaluationSystem.Controllers
                     Title = "دقت در انجام کار",
                     Description = "میزان دقت و توجه به جزئیات"
                 },
-
                 new EvaluationCriterion
                 {
                     Id = 3,
@@ -184,7 +176,6 @@ namespace EvaluationSystem.Controllers
                     Title = "کار تیمی",
                     Description = "توانایی همکاری و تعامل با سایر همکاران"
                 },
-
                 new EvaluationCriterion
                 {
                     Id = 4,
@@ -192,7 +183,6 @@ namespace EvaluationSystem.Controllers
                     Title = "مسئولیت‌پذیری",
                     Description = "میزان مسئولیت‌پذیری در انجام وظایف"
                 },
-
                 new EvaluationCriterion
                 {
                     Id = 5,
@@ -202,7 +192,7 @@ namespace EvaluationSystem.Controllers
                 }
             };
 
-            // لیست کارکنان - فعلاً آزمایشی
+            // لیست کارکنان
             var employees = new List<Employee>
             {
                 new Employee
@@ -213,7 +203,6 @@ namespace EvaluationSystem.Controllers
                     JobId = 1,
                     EvaluatorCode = null
                 },
-
                 new Employee
                 {
                     PersonnelCode = "1002",
@@ -222,7 +211,6 @@ namespace EvaluationSystem.Controllers
                     JobId = 2,
                     EvaluatorCode = "1001"
                 },
-
                 new Employee
                 {
                     PersonnelCode = "1003",
@@ -231,7 +219,6 @@ namespace EvaluationSystem.Controllers
                     JobId = 3,
                     EvaluatorCode = "1001"
                 },
-
                 new Employee
                 {
                     PersonnelCode = "1004",
@@ -242,16 +229,19 @@ namespace EvaluationSystem.Controllers
                 }
             };
 
-            // پیدا کردن کارمند
+            // پیدا کردن کارمند مورد نظر
             var employee = employees
-                .FirstOrDefault(e => e.PersonnelCode == id);
+                .FirstOrDefault(e =>
+                    e.PersonnelCode == id &&
+                    e.EvaluatorCode == currentEvaluatorCode);
 
+            // اگر این کارمند متعلق به ارزیاب فعلی نباشد
             if (employee == null)
             {
                 return NotFound();
             }
 
-            // پیدا کردن شغل کارمند
+            // پیدا کردن شغل
             var job = jobs
                 .FirstOrDefault(j => j.Id == employee.JobId);
 
@@ -260,12 +250,12 @@ namespace EvaluationSystem.Controllers
                 return NotFound();
             }
 
-            // پیدا کردن معیارهای مربوط به شغل
+            // معیارهای مربوط به شغل
             var employeeCriteria = criteria
                 .Where(c => c.JobId == employee.JobId)
                 .ToList();
 
-            // ساخت EvaluationItem برای هر معیار
+            // ساخت آیتم‌های ارزیابی
             var items = employeeCriteria
                 .Select(c => new EvaluationItem
                 {
@@ -274,7 +264,7 @@ namespace EvaluationSystem.Controllers
                 })
                 .ToList();
 
-            // ساخت ViewModel فرم ارزیابی
+            // ساخت ViewModel
             var model = new EvaluationFormViewModel
             {
                 Employee = employee,

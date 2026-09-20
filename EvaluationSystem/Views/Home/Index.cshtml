@@ -4,15 +4,47 @@
 
 <div class="dashboard">
 
+    <!-- اطلاعات کاربر و خروج -->
+    <div style="
+        position: fixed;
+        top: 20px;
+        right: 30px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        direction: rtl;
+        z-index: 1000;
+    ">
+        <span style="font-size:15px;">
+            کاربر: <strong>@User.Identity?.Name</strong>
+        </span>
+
+        <a asp-controller="Account"
+           asp-action="Logout"
+           style="
+               background:#dc3545;
+               color:white;
+               padding:7px 18px;
+               border-radius:6px;
+               text-decoration:none;
+               font-size:14px;
+           ">
+            خروج
+        </a>
+    </div>
+
+    <!-- عنوان اصلی -->
     <h1>سیستم ارزیابی عملکرد کارکنان</h1>
 
+    <!-- منوی اصلی -->
     <div class="dashboard-menu">
 
-       <a asp-controller="Employees" asp-action="Index" class="menu-item">
-    <div class="menu-icon">👥</div>
-    <div class="menu-title">کارکنان</div>
-</a>
-
+        <a asp-controller="Employees"
+           asp-action="Index"
+           class="menu-item">
+            <div class="menu-icon">👥</div>
+            <div class="menu-title">کارکنان</div>
+        </a>
 
         <a href="#" class="menu-item">
             <div class="menu-icon">⚙️</div>
