@@ -11,5 +11,7 @@ namespace EvaluationSystem.Models.ViewModels
         public List<EvaluationItem> Items { get; set; } = new();
 
         public string? Comment { get; set; }
+
+        public int EvaluationListId { get; set; }
     }
 }

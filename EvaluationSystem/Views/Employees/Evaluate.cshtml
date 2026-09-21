@@ -362,8 +362,8 @@
     }
 
     .duty-modal {
-        width: min(650px, 100%);
-        max-height: 80vh;
+        width: min(800px, 100%);
+        max-height: 85vh;
         overflow: auto;
         background: white;
         border-radius: 12px;
@@ -375,7 +375,9 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e5e7eb;
     }
 
     .duty-modal-header h4 {
@@ -387,6 +389,42 @@
         background: transparent;
         font-size: 25px;
         cursor: pointer;
+    }
+
+    .duty-filters {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .duty-filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .duty-filter-group label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #495057;
+    }
+
+    .duty-select {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid #dfe3e8;
+        border-radius: 8px;
+        padding: 8px 10px;
+        background: white;
+        direction: rtl;
+        font-family: inherit;
+    }
+
+    .duty-section-title {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 10px;
     }
 
     .duty-list {
@@ -404,10 +442,21 @@
         cursor: pointer;
         line-height: 1.8;
         width: 100%;
+        font-family: inherit;
+        font-size: 13px;
     }
 
     .duty-item:hover {
         background: #f0f2f4;
+    }
+
+    .duty-loading,
+    .duty-empty {
+        text-align: center;
+        color: #6b7280;
+        padding: 20px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
     }
 
     /* ریسپانسیو */
@@ -457,6 +506,10 @@
         }
 
         .employee-info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .duty-filters {
             grid-template-columns: 1fr;
         }
     }
@@ -661,8 +714,6 @@
 
                     <div id="resultRows"></div>
 
-                   
-
                 </div>
 
             </section>
@@ -689,7 +740,9 @@
 
 </div>
 
-<!-- پنجره انتخاب شرح وظایف -->
+<!-- ==========================================
+     پنجره انتخاب شرح وظایف
+     ========================================== -->
 
 <div id="dutyModalBackdrop"
      class="duty-modal-backdrop">
@@ -708,6 +761,52 @@
                 ×
             </button>
 
+        </div>
+
+        <!-- رسته و شغل -->
+        <div class="duty-filters">
+
+            <div class="duty-filter-group">
+
+                <label for="dutyJobCategory">
+                    رسته شغلی
+                </label>
+
+                <select id="dutyJobCategory"
+                        class="duty-select"
+                        onchange="loadJobsForSelectedCategory()">
+
+                    <option value="">
+                        در حال بارگذاری...
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="duty-filter-group">
+
+                <label for="dutyJob">
+                    عنوان شغلی
+                </label>
+
+                <select id="dutyJob"
+                        class="duty-select"
+                        onchange="loadDutiesForSelectedJob()">
+
+                    <option value="">
+                        ابتدا رسته را انتخاب کنید
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+        <!-- لیست شرح وظایف -->
+        <div class="duty-section-title">
+            شرح وظایف
         </div>
 
         <div class="duty-list"
@@ -1166,18 +1265,26 @@
 
     const employeeJobId = @Model.Job.Id;
 
-    function getCurrentLevel() {
+const employeeJobLevel =
+    @Html.Raw(
+        System.Text.Json.JsonSerializer.Serialize(
+            Model.Job.Level.ToString()
+        )
+    );
 
-        if (employeeJobId === 1) {
-            return "managerial";
-        }
 
-        if (employeeJobId === 2 || employeeJobId === 3) {
-            return "specialist";
-        }
+function getCurrentLevel() {
 
-        return "other";
+    if (employeeJobLevel === "Managerial") {
+        return "managerial";
     }
+
+    if (employeeJobLevel === "Specialist") {
+        return "specialist";
+    }
+
+    return "other";
+}
 
     const currentCompetencies =
         competencySets[getCurrentLevel()];
@@ -1643,45 +1750,23 @@
 
 
     /* =========================================================
-       فهرست شرح وظایف
+       انتخاب از شرح وظایف
        ========================================================= */
 
-    const dutiesByJobId = {
+    const currentEmployeeJobId =
+        @Model.Job.Id;
 
-        1: [
-
-            "نمونه وظیفه مدیریتی شماره ۱",
-            "نمونه وظیفه مدیریتی شماره ۲",
-            "نمونه وظیفه مدیریتی شماره ۳",
-            "نمونه وظیفه مدیریتی شماره ۴"
-
-        ],
-
-        2: [
-
-            "نمونه وظیفه کارشناسی شماره ۱",
-            "نمونه وظیفه کارشناسی شماره ۲",
-            "نمونه وظیفه کارشناسی شماره ۳",
-            "نمونه وظیفه کارشناسی شماره ۴"
-
-        ],
-
-        3: [
-
-            "نمونه وظیفه کارشناسی منابع انسانی شماره ۱",
-            "نمونه وظیفه کارشناسی منابع انسانی شماره ۲",
-            "نمونه وظیفه کارشناسی منابع انسانی شماره ۳",
-            "نمونه وظیفه کارشناسی منابع انسانی شماره ۴"
-
-        ]
-
-    };
-
+    const currentEmployeeJobCategoryId =
+        @Model.Job.JobCategoryId;
 
     let activeResultRow = 0;
 
 
-    function openDutyModal(rowIndex) {
+    /* =========================================================
+       باز کردن پنجره انتخاب شرح وظایف
+       ========================================================= */
+
+    async function openDutyModal(rowIndex) {
 
         activeResultRow =
             rowIndex;
@@ -1693,73 +1778,450 @@
             );
 
 
+        const categorySelect =
+            document.getElementById(
+                "dutyJobCategory"
+            );
+
+
+        const jobSelect =
+            document.getElementById(
+                "dutyJob"
+            );
+
+
+        const dutyList =
+            document.getElementById(
+                "dutyList"
+            );
+
+
+        modal.classList.add("show");
+
+
+        categorySelect.innerHTML =
+            `<option value="">
+                در حال بارگذاری...
+             </option>`;
+
+
+        jobSelect.innerHTML =
+            `<option value="">
+                در حال بارگذاری...
+             </option>`;
+
+
+        dutyList.innerHTML =
+            `<div class="duty-loading">
+                در حال بارگذاری شرح وظایف...
+             </div>`;
+
+
+        try {
+
+            /*
+               دریافت رسته‌های شغلی
+            */
+
+            const categoryResponse =
+                await fetch(
+                    '@Url.Action("GetJobCategories", "Employees")'
+                );
+
+
+            if (!categoryResponse.ok) {
+
+                throw new Error(
+                    "خطا در دریافت رسته‌های شغلی"
+                );
+            }
+
+
+            const categories =
+                await categoryResponse.json();
+
+
+            categorySelect.innerHTML =
+                `<option value="">
+                    انتخاب رسته شغلی
+                 </option>`;
+
+
+            categories.forEach(category => {
+
+                const option =
+                    document.createElement("option");
+
+
+                option.value =
+                    category.id;
+
+
+                option.textContent =
+                    category.title;
+
+
+                categorySelect.appendChild(option);
+
+            });
+
+
+            /*
+               انتخاب رسته شغل اصلی کارمند
+            */
+
+            categorySelect.value =
+                String(
+                    currentEmployeeJobCategoryId
+                );
+
+
+            /*
+               دریافت مشاغل رسته
+            */
+
+            await loadJobsForCategory(
+                currentEmployeeJobCategoryId
+            );
+
+
+            /*
+               انتخاب شغل اصلی کارمند
+            */
+
+            jobSelect.value =
+                String(
+                    currentEmployeeJobId
+                );
+
+
+            /*
+               دریافت وظایف شغل اصلی
+            */
+
+            await loadDutiesForJob(
+                currentEmployeeJobId
+            );
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+
+            dutyList.innerHTML =
+                `<div class="duty-empty">
+                    خطا در دریافت اطلاعات شرح وظایف
+                 </div>`;
+        }
+    }
+
+
+    /* =========================================================
+       تغییر رسته
+       ========================================================= */
+
+    async function loadJobsForSelectedCategory() {
+
+        const categoryId =
+            document.getElementById(
+                "dutyJobCategory"
+            ).value;
+
+
+        const jobSelect =
+            document.getElementById(
+                "dutyJob"
+            );
+
+
+        const dutyList =
+            document.getElementById(
+                "dutyList"
+            );
+
+
+        if (!categoryId) {
+
+            jobSelect.innerHTML =
+                `<option value="">
+                    ابتدا رسته را انتخاب کنید
+                 </option>`;
+
+
+            dutyList.innerHTML =
+                `<div class="duty-empty">
+                    ابتدا رسته شغلی را انتخاب کنید
+                 </div>`;
+
+
+            return;
+        }
+
+
+        try {
+
+            await loadJobsForCategory(
+                categoryId
+            );
+
+
+            /*
+               پس از تغییر رسته،
+               اولین شغل به‌صورت خودکار انتخاب می‌شود.
+            */
+
+            if (
+                jobSelect.options.length > 1
+            ) {
+
+                jobSelect.selectedIndex = 1;
+
+
+                await loadDutiesForJob(
+                    jobSelect.value
+                );
+
+            }
+            else {
+
+                dutyList.innerHTML =
+                    `<div class="duty-empty">
+                        برای این رسته شغلی، شغلی ثبت نشده است.
+                     </div>`;
+            }
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+
+            dutyList.innerHTML =
+                `<div class="duty-empty">
+                    خطا در دریافت مشاغل
+                 </div>`;
+        }
+    }
+
+
+    /* =========================================================
+       دریافت مشاغل یک رسته
+       ========================================================= */
+
+    async function loadJobsForCategory(categoryId) {
+
+        const jobSelect =
+            document.getElementById(
+                "dutyJob"
+            );
+
+
+        jobSelect.innerHTML =
+            `<option value="">
+                در حال بارگذاری...
+             </option>`;
+
+
+        const response =
+            await fetch(
+                '@Url.Action("GetJobsByCategory", "Employees")?categoryId='
+                + encodeURIComponent(categoryId)
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "خطا در دریافت مشاغل"
+            );
+        }
+
+
+        const jobs =
+            await response.json();
+
+
+        jobSelect.innerHTML =
+            `<option value="">
+                انتخاب عنوان شغلی
+             </option>`;
+
+
+        jobs.forEach(job => {
+
+            const option =
+                document.createElement("option");
+
+
+            option.value =
+                job.id;
+
+
+            option.textContent =
+                job.title;
+
+
+            jobSelect.appendChild(option);
+
+        });
+    }
+
+
+    /* =========================================================
+       تغییر شغل
+       ========================================================= */
+
+    async function loadDutiesForSelectedJob() {
+
+        const jobId =
+            document.getElementById(
+                "dutyJob"
+            ).value;
+
+
+        const dutyList =
+            document.getElementById(
+                "dutyList"
+            );
+
+
+        if (!jobId) {
+
+            dutyList.innerHTML =
+                `<div class="duty-empty">
+                    ابتدا عنوان شغلی را انتخاب کنید
+                 </div>`;
+
+
+            return;
+        }
+
+
+        try {
+
+            await loadDutiesForJob(
+                jobId
+            );
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+
+            dutyList.innerHTML =
+                `<div class="duty-empty">
+                    خطا در دریافت شرح وظایف
+                 </div>`;
+        }
+    }
+
+
+    /* =========================================================
+       دریافت شرح وظایف یک شغل
+       ========================================================= */
+
+    async function loadDutiesForJob(jobId) {
+
         const list =
             document.getElementById(
                 "dutyList"
             );
 
 
+        list.innerHTML =
+            `<div class="duty-loading">
+                در حال بارگذاری شرح وظایف...
+             </div>`;
+
+
+        const response =
+            await fetch(
+                '@Url.Action("GetJobDuties", "Employees")?jobId='
+                + encodeURIComponent(jobId)
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "خطا در دریافت شرح وظایف"
+            );
+        }
+
+
         const duties =
-            dutiesByJobId[
-                employeeJobId
-            ] || [];
+            await response.json();
 
 
         list.innerHTML = "";
 
 
-        if (duties.length === 0) {
+        if (
+            !duties ||
+            duties.length === 0
+        ) {
 
-            list.innerHTML = `
+            list.innerHTML =
+                `<div class="duty-empty">
+                    برای این شغل شرح وظیفه‌ای ثبت نشده است.
+                 </div>`;
 
-                <div class="duty-item">
 
-                    شرح وظایف این شغل هنوز در اطلاعات پایه ثبت نشده است.
-
-                </div>
-            `;
-
+            return;
         }
-        else {
-
-            duties.forEach(duty => {
-
-                const item =
-                    document.createElement(
-                        "button"
-                    );
 
 
-                item.type = "button";
+        duties.forEach(duty => {
 
-                item.className =
-                    "duty-item";
+            const item =
+                document.createElement(
+                    "button"
+                );
 
-                item.innerText =
-                    duty;
+
+            item.type =
+                "button";
 
 
-                item.onclick = function () {
+            item.className =
+                "duty-item";
 
-                    document.getElementById(
-                        `resultText_${activeResultRow}`
-                    ).value = duty;
+
+            item.innerText =
+                duty.description;
+
+
+            item.onclick =
+                function () {
+
+                    const resultText =
+                        document.getElementById(
+                            `resultText_${activeResultRow}`
+                        );
+
+
+                    if (resultText) {
+
+                        resultText.value =
+                            duty.description;
+                    }
 
 
                     closeDutyModal();
                 };
 
 
-                list.appendChild(item);
+            list.appendChild(item);
 
-            });
-
-        }
-
-
-        modal.classList.add("show");
+        });
     }
 
+
+    /* =========================================================
+       بستن پنجره
+       ========================================================= */
 
     function closeDutyModal() {
 
@@ -1772,6 +2234,10 @@
             );
     }
 
+
+    /* =========================================================
+       کلیک روی پس‌زمینه
+       ========================================================= */
 
     document
         .getElementById(
@@ -1884,217 +2350,227 @@
 
     function saveEvaluation() {
 
-    const errors = [];
+        const errors = [];
 
-    /* =========================================================
-       1. کنترل کامل بودن ارزیابی شایستگی‌ها
-       ========================================================= */
 
-    currentCompetencies.forEach((competency, index) => {
+        /* =========================================================
+           1. کنترل کامل بودن ارزیابی شایستگی‌ها
+           ========================================================= */
 
-        const selected =
-            document.getElementById(
-                `competency_${index}`
-            ).value;
+        currentCompetencies.forEach(
+            (competency, index) => {
 
-        // هیچ سطحی انتخاب نشده
-        if (selected === "") {
+                const selected =
+                    document.getElementById(
+                        `competency_${index}`
+                    ).value;
+
+
+                if (selected === "") {
+
+                    errors.push(
+                        `شایستگی «${competency.title}» ارزیابی نشده است.`
+                    );
+
+                    return;
+                }
+
+
+                const selectedIndex =
+                    parseInt(selected);
+
+
+                /*
+                   برای دو سطح اول و دو سطح آخر،
+                   حداقل یک مصداق رفتاری باید انتخاب شود.
+                */
+
+                const requiresBehavior =
+                    selectedIndex === 0 ||
+                    selectedIndex === 1 ||
+                    selectedIndex === 5 ||
+                    selectedIndex === 6;
+
+
+                if (requiresBehavior) {
+
+                    const checkedBehaviors =
+                        document.querySelectorAll(
+                            `.behavior-check[data-competency="${index}"]:checked`
+                        );
+
+
+                    if (
+                        checkedBehaviors.length === 0
+                    ) {
+
+                        errors.push(
+                            `برای شایستگی «${competency.title}» حداقل یک مصداق رفتاری باید انتخاب شود.`
+                        );
+                    }
+                }
+
+            }
+        );
+
+
+        /* =========================================================
+           2. کنترل وظایف / پروژه‌ها / اقدامات
+           ========================================================= */
+
+        let enteredTasks = 0;
+
+
+        for (let i = 0; i < 7; i++) {
+
+            const text =
+                document.getElementById(
+                    `resultText_${i}`
+                ).value.trim();
+
+
+            const weight =
+                document.getElementById(
+                    `resultWeight_${i}`
+                ).value;
+
+
+            const status =
+                document.getElementById(
+                    `resultStatus_${i}`
+                ).value;
+
+
+            /*
+               اگر وظیفه درج شده باشد،
+               باید هم وزن و هم وضعیت داشته باشد.
+            */
+
+            if (text !== "") {
+
+                enteredTasks++;
+
+
+                if (weight === "") {
+
+                    errors.push(
+                        `وظیفه ردیف ${i + 1} دارای وزن نیست.`
+                    );
+                }
+
+
+                if (status === "") {
+
+                    errors.push(
+                        `وضعیت انجام وظیفه ردیف ${i + 1} مشخص نشده است.`
+                    );
+                }
+            }
+
+
+            /*
+               اگر وزن یا وضعیت وارد شده ولی عنوان وظیفه خالی باشد،
+               این ردیف هم ناقص محسوب می‌شود.
+            */
+
+            if (
+                text === "" &&
+                (
+                    weight !== "" ||
+                    status !== ""
+                )
+            ) {
+
+                errors.push(
+                    `ردیف ${i + 1} دارای اطلاعات ناقص است؛ عنوان وظیفه، اقدام یا پروژه را وارد کنید.`
+                );
+            }
+
+        }
+
+
+        /* =========================================================
+           3. حداقل سه وظیفه
+           ========================================================= */
+
+        if (enteredTasks < 3) {
 
             errors.push(
-                `شایستگی «${competency.title}» ارزیابی نشده است.`
+                `حداقل ۳ وظیفه، اقدام یا پروژه باید در بخش نتایج درج شود.`
+            );
+        }
+
+
+        /* =========================================================
+           4. نمایش خطاها
+           ========================================================= */
+
+        if (errors.length > 0) {
+
+            alert(
+                "امکان ثبت ارزیابی وجود ندارد:\n\n" +
+
+                errors
+                    .map(
+                        (error, index) =>
+                            `${index + 1}. ${error}`
+                    )
+                    .join("\n")
             );
 
             return;
         }
 
-        const selectedIndex =
-            parseInt(selected);
 
-        /*
-           برای دو سطح اول و دو سطح آخر،
-           حداقل یک مصداق رفتاری باید انتخاب شود.
-        */
+        /* =========================================================
+           5. محاسبه امتیازها
+           ========================================================= */
 
-        const requiresBehavior =
-            selectedIndex === 0 ||
-            selectedIndex === 1 ||
-            selectedIndex === 5 ||
-            selectedIndex === 6;
+        calculateScores();
 
 
-        if (requiresBehavior) {
-
-            const checkedBehaviors =
-                document.querySelectorAll(
-                    `.behavior-check[data-competency="${index}"]:checked`
-                );
+        const resultScore =
+            calculateResultScore();
 
 
-            if (checkedBehaviors.length === 0) {
-
-                errors.push(
-                    `برای شایستگی «${competency.title}» حداقل یک مصداق رفتاری باید انتخاب شود.`
-                );
-            }
-        }
-
-    });
+        const competencyScore =
+            calculateCompetencyScore();
 
 
-    /* =========================================================
-       2. کنترل وظایف / پروژه‌ها / اقدامات
-       ========================================================= */
-
-    let enteredTasks = 0;
-
-    for (let i = 0; i < 7; i++) {
-
-        const text =
-            document.getElementById(
-                `resultText_${i}`
-            ).value.trim();
-
-
-        const weight =
-            document.getElementById(
-                `resultWeight_${i}`
-            ).value;
-
-
-        const status =
-            document.getElementById(
-                `resultStatus_${i}`
-            ).value;
-
-
-        /*
-           اگر وظیفه درج شده باشد،
-           باید هم وزن و هم وضعیت داشته باشد.
-        */
-
-        if (text !== "") {
-
-            enteredTasks++;
-
-
-            if (weight === "") {
-
-                errors.push(
-                    `وظیفه ردیف ${i + 1} دارای وزن نیست.`
-                );
-            }
-
-
-            if (status === "") {
-
-                errors.push(
-                    `وضعیت انجام وظیفه ردیف ${i + 1} مشخص نشده است.`
-                );
-            }
-        }
-
-
-        /*
-           اگر وزن یا وضعیت وارد شده ولی عنوان وظیفه خالی باشد،
-           این ردیف هم ناقص محسوب می‌شود.
-        */
-
-        if (
-            text === "" &&
-            (
-                weight !== "" ||
-                status !== ""
-            )
-        ) {
-
-            errors.push(
-                `ردیف ${i + 1} دارای اطلاعات ناقص است؛ عنوان وظیفه، اقدام یا پروژه را وارد کنید.`
+        const finalScore =
+            Math.round(
+                (resultScore +
+                    competencyScore) / 2
             );
-        }
-
-    }
 
 
-    /* =========================================================
-       3. حداقل سه وظیفه
-       ========================================================= */
-
-    if (enteredTasks < 3) {
-
-        errors.push(
-            `حداقل ۳ وظیفه، اقدام یا پروژه باید در بخش نتایج درج شود.`
-        );
-    }
+        const grade =
+            getGrade(finalScore);
 
 
-    /* =========================================================
-       4. نمایش خطاها
-       ========================================================= */
-
-    if (errors.length > 0) {
+        /* =========================================================
+           6. ثبت موفق - فعلاً آزمایشی
+           ========================================================= */
 
         alert(
-            "امکان ثبت ارزیابی وجود ندارد:\n\n" +
-            errors
-                .map((error, index) =>
-                    `${index + 1}. ${error}`
-                )
-                .join("\n")
-        );
+            "ثبت ارزیابی با موفقیت انجام شد.\n\n" +
 
-        return;
+            "امتیاز نتایج: " +
+            resultScore +
+            "\n" +
+
+            "امتیاز شایستگی: " +
+            competencyScore +
+            "\n" +
+
+            "امتیاز نهایی عملکرد: " +
+            finalScore +
+            "\n" +
+
+            "وضعیت نهایی عملکرد: " +
+            grade
+        );
     }
-
-
-    /* =========================================================
-       5. محاسبه امتیازها
-       ========================================================= */
-
-    calculateScores();
-
-
-    const resultScore =
-        calculateResultScore();
-
-
-    const competencyScore =
-        calculateCompetencyScore();
-
-
-    const finalScore =
-        Math.round(
-            (resultScore +
-                competencyScore) / 2
-        );
-
-
-    const grade =
-        getGrade(finalScore);
-
-
-    /* =========================================================
-       6. ثبت موفق - فعلاً آزمایشی
-       ========================================================= */
-
-    alert(
-        "ثبت ارزیابی با موفقیت انجام شد.\n\n" +
-
-        "امتیاز نتایج: " +
-        resultScore +
-        "\n" +
-
-        "امتیاز شایستگی: " +
-        competencyScore +
-        "\n" +
-
-        "امتیاز نهایی عملکرد: " +
-        finalScore +
-        "\n" +
-
-        "وضعیت نهایی عملکرد: " +
-        grade
-    );
-}
 
 
     /* =========================================================
@@ -2147,24 +2623,28 @@
             .querySelectorAll(
                 ".behavior-check"
             )
-            .forEach(check => {
+            .forEach(
+                check => {
 
-                check.checked = false;
+                    check.checked = false;
 
-            });
+                }
+            );
 
 
         document
             .querySelectorAll(
                 ".behavior-item"
             )
-            .forEach(item => {
+            .forEach(
+                item => {
 
-                item.classList.remove(
-                    "show-check"
-                );
+                    item.classList.remove(
+                        "show-check"
+                    );
 
-            });
+                }
+            );
 
 
         document.getElementById(
@@ -2182,455 +2662,700 @@
 
     function showReport() {
 
-    calculateScores();
+        calculateScores();
 
-    const resultScore = calculateResultScore();
-    const competencyScore = calculateCompetencyScore();
 
-    if (resultScore === null) {
-        alert("برای نمایش کارنامه، حداقل یک نتیجه باید ارزیابی شده باشد.");
-        return;
-    }
+        const resultScore =
+            calculateResultScore();
 
-    if (competencyScore === null) {
-        alert("برای نمایش کارنامه، تمام شایستگی‌ها باید ارزیابی شده باشند.");
-        return;
-    }
 
-    const finalScore =
-        Math.round((resultScore + competencyScore) / 2);
+        const competencyScore =
+            calculateCompetencyScore();
 
-    const grade = getGrade(finalScore);
 
-    const employeeCode =
-    @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Employee.PersonnelCode));
+        if (resultScore === null) {
 
-const employeeName =
-    @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-        Model.Employee.FirstName + " " + Model.Employee.LastName
-    ));
+            alert(
+                "برای نمایش کارنامه، حداقل یک نتیجه باید ارزیابی شده باشد."
+            );
 
-const jobTitle =
-    @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Job.Title));
+            return;
+        }
 
-const evaluatorName =
-    @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-        User.Identity?.Name ?? ""
-    ));
 
-    const evaluationPeriod = "۱۴۰۵";
+        if (competencyScore === null) {
 
-    /* =========================================================
-       آماده‌سازی نتایج
-       ========================================================= */
+            alert(
+                "برای نمایش کارنامه، تمام شایستگی‌ها باید ارزیابی شده باشند."
+            );
 
-    let resultsHtml = "";
+            return;
+        }
 
-    for (let i = 0; i < 7; i++) {
 
-        const text =
-            document.getElementById(`resultText_${i}`).value.trim();
+        const finalScore =
+            Math.round(
+                (resultScore +
+                    competencyScore) / 2
+            );
 
-        const weight =
-            document.getElementById(`resultWeight_${i}`).value;
 
-        const statusIndex =
-            document.getElementById(`resultStatus_${i}`).value;
+        const grade =
+            getGrade(finalScore);
 
-        if (text !== "") {
 
-            let statusScore = "-";
+        const employeeCode =
+            @Html.Raw(
+                System.Text.Json.JsonSerializer.Serialize(
+                    Model.Employee.PersonnelCode
+                )
+            );
 
-            if (statusIndex !== "") {
-                statusScore =
-                    resultStatuses[parseInt(statusIndex)].score;
+
+        const employeeName =
+            @Html.Raw(
+                System.Text.Json.JsonSerializer.Serialize(
+                    Model.Employee.FirstName +
+                    " " +
+                    Model.Employee.LastName
+                )
+            );
+
+
+        const jobTitle =
+            @Html.Raw(
+                System.Text.Json.JsonSerializer.Serialize(
+                    Model.Job.Title
+                )
+            );
+
+
+        const evaluatorName =
+            @Html.Raw(
+                System.Text.Json.JsonSerializer.Serialize(
+                    User.Identity?.Name ?? ""
+                )
+            );
+
+
+        const evaluationPeriod =
+            "۱۴۰۵";
+
+
+        /* =========================================================
+           آماده‌سازی نتایج
+           ========================================================= */
+
+        let resultsHtml = "";
+
+
+        for (let i = 0; i < 7; i++) {
+
+            const text =
+                document.getElementById(
+                    `resultText_${i}`
+                ).value.trim();
+
+
+            const weight =
+                document.getElementById(
+                    `resultWeight_${i}`
+                ).value;
+
+
+            const statusIndex =
+                document.getElementById(
+                    `resultStatus_${i}`
+                ).value;
+
+
+            if (text !== "") {
+
+                let statusScore = "-";
+
+
+                if (statusIndex !== "") {
+
+                    statusScore =
+                        resultStatuses[
+                            parseInt(statusIndex)
+                        ].score;
+                }
+
+
+                resultsHtml += `
+
+                    <tr>
+
+                        <td>
+                            ${i + 1}
+                        </td>
+
+                        <td class="result-task">
+                            ${escapeHtml(text)}
+                        </td>
+
+                        <td>
+                            ${weight || "-"}
+                        </td>
+
+                        <td>
+                            ${statusScore}
+                        </td>
+
+                    </tr>
+                `;
             }
-
-            resultsHtml += `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td class="result-task">${escapeHtml(text)}</td>
-                    <td>${weight || "-"}</td>
-                    <td>${statusScore}</td>
-                </tr>
-            `;
-        }
-    }
-
-    /* =========================================================
-       آماده‌سازی شایستگی‌ها
-       ========================================================= */
-
-    let competencyRows = [];
-
-    currentCompetencies.forEach((competency, index) => {
-
-        const selected =
-            document.getElementById(`competency_${index}`).value;
-
-        let levelText = "-";
-        let score = 0;
-        let selectedLevel = -1;
-
-        if (selected !== "") {
-
-            selectedLevel = parseInt(selected);
-
-            levelText =
-                competencyLevels[selectedLevel].text;
-
-            score =
-                competencyLevels[selectedLevel].score;
         }
 
-        let selectedBehaviors = [];
 
-        document
-            .querySelectorAll(
-                `.behavior-check[data-competency="${index}"]:checked`
-            )
-            .forEach(check => {
+        /* =========================================================
+           آماده‌سازی شایستگی‌ها
+           ========================================================= */
 
-                const behaviorIndex =
-                    parseInt(check.dataset.behavior);
-
-                selectedBehaviors.push(
-                    competency.behaviors[behaviorIndex]
-                );
-            });
-
-        competencyRows.push({
-            title: competency.title,
-            levelText: levelText,
-            score: score,
-            levelIndex: selectedLevel,
-            behaviors: competency.behaviors,
-            selectedBehaviors: selectedBehaviors
-        });
-    });
-
-    /* =========================================================
-       تقسیم شایستگی‌ها بین دو صفحه
-       ========================================================= */
-
-    const middle =
-        Math.ceil(competencyRows.length / 2);
-
-    const firstPageCompetencies =
-        competencyRows.slice(0, middle);
-
-    const secondPageCompetencies =
-        competencyRows.slice(middle);
+        let competencyRows = [];
 
 
-    function createCompetencyHtml(items) {
+        currentCompetencies.forEach(
+            (competency, index) => {
 
-        let html = "";
+                const selected =
+                    document.getElementById(
+                        `competency_${index}`
+                    ).value;
 
-        items.forEach(item => {
 
-            let behaviorsHtml = "";
+                let levelText = "-";
 
-            item.behaviors.forEach(behavior => {
+                let score = 0;
 
-                const isSelected =
-                    item.selectedBehaviors.includes(behavior);
+                let selectedLevel = -1;
 
-                behaviorsHtml += `
-                    <div class="behavior">
-                        ${
-                            isSelected
-                                ? `<span class="selected-mark">✓</span>`
-                                : ""
+
+                if (selected !== "") {
+
+                    selectedLevel =
+                        parseInt(selected);
+
+
+                    levelText =
+                        competencyLevels[
+                            selectedLevel
+                        ].text;
+
+
+                    score =
+                        competencyLevels[
+                            selectedLevel
+                        ].score;
+                }
+
+
+                let selectedBehaviors = [];
+
+
+                document
+                    .querySelectorAll(
+                        `.behavior-check[data-competency="${index}"]:checked`
+                    )
+                    .forEach(
+                        check => {
+
+                            const behaviorIndex =
+                                parseInt(
+                                    check.dataset.behavior
+                                );
+
+
+                            selectedBehaviors.push(
+                                competency.behaviors[
+                                    behaviorIndex
+                                ]
+                            );
+
                         }
-                        ${escapeHtml(behavior)}
+                    );
+
+
+                competencyRows.push({
+
+                    title:
+                        competency.title,
+
+                    levelText:
+                        levelText,
+
+                    score:
+                        score,
+
+                    levelIndex:
+                        selectedLevel,
+
+                    behaviors:
+                        competency.behaviors,
+
+                    selectedBehaviors:
+                        selectedBehaviors
+
+                });
+
+            }
+        );
+
+
+        /* =========================================================
+           تقسیم شایستگی‌ها بین دو صفحه
+           ========================================================= */
+
+        const middle =
+            Math.ceil(
+                competencyRows.length / 2
+            );
+
+
+        const firstPageCompetencies =
+            competencyRows.slice(
+                0,
+                middle
+            );
+
+
+        const secondPageCompetencies =
+            competencyRows.slice(
+                middle
+            );
+
+
+        function createCompetencyHtml(items) {
+
+            let html = "";
+
+
+            items.forEach(item => {
+
+                let behaviorsHtml = "";
+
+
+                item.behaviors.forEach(
+                    behavior => {
+
+                        const isSelected =
+                            item.selectedBehaviors
+                                .includes(behavior);
+
+
+                        behaviorsHtml += `
+
+                            <div class="behavior">
+
+                                ${
+                                    isSelected
+                                        ? `<span class="selected-mark">✓</span>`
+                                        : ""
+                                }
+
+                                ${escapeHtml(behavior)}
+
+                            </div>
+                        `;
+                    }
+                );
+
+
+                html += `
+
+                    <div class="competency-box">
+
+                        <div class="competency-title">
+                            ${escapeHtml(item.title)}
+                        </div>
+
+                        <div class="competency-content">
+
+                            <div class="competency-level">
+
+                                <div class="level-label">
+                                    وضعیت ارزیابی
+                                </div>
+
+                                <div class="level-value">
+                                    ${escapeHtml(item.levelText)}
+                                </div>
+
+                            </div>
+
+                            <div class="behaviors">
+
+                                <div class="behaviors-title">
+                                    مصادیق رفتاری
+                                </div>
+
+                                <div class="behavior-grid">
+                                    ${behaviorsHtml}
+                                </div>
+
+                            </div>
+
+                        </div>
+
                     </div>
                 `;
             });
 
-            html += `
-                <div class="competency-box">
 
-                    <div class="competency-title">
-                        ${escapeHtml(item.title)}
-                    </div>
-
-                    <div class="competency-content">
-
-                        <div class="competency-level">
-                            <div class="level-label">
-                                وضعیت ارزیابی
-                            </div>
-
-                            <div class="level-value">
-                                ${escapeHtml(item.levelText)}
-                            </div>
-                        </div>
-
-                        <div class="behaviors">
-
-                            <div class="behaviors-title">
-                                مصادیق رفتاری
-                            </div>
-
-                            <div class="behavior-grid">
-                                ${behaviorsHtml}
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-            `;
-        });
-
-        return html;
-    }
-
-
-    /* =========================================================
-       مصادیق مثبت و قابل بهبود
-       ========================================================= */
-
-    let positiveBehaviors = [];
-    let improvementBehaviors = [];
-
-    competencyRows.forEach(item => {
-
-        if (
-            item.levelIndex === 0 ||
-            item.levelIndex === 1
-        ) {
-
-            positiveBehaviors.push(
-                ...item.selectedBehaviors
-            );
-
-        }
-
-        if (
-            item.levelIndex === 5 ||
-            item.levelIndex === 6
-        ) {
-
-            improvementBehaviors.push(
-                ...item.selectedBehaviors
-            );
-        }
-    });
-
-
-    function createBulletList(items) {
-
-        if (items.length === 0) {
-
-            return `
-                <div class="empty-message">
-                    موردی ثبت نشده است
-                </div>
-            `;
-        }
-
-        return items.map(item => `
-            <div class="bullet-item">
-                • ${escapeHtml(item)}
-            </div>
-        `).join("");
-    }
-
-
-    /* =========================================================
-       داده نمودار راداری
-       ========================================================= */
-
-    const radarItems =
-        competencyRows.map(item => ({
-            title: item.title,
-            score: item.score
-        }));
-
-
-    function createRadarChart(items) {
-
-        const width = 390;
-        const height = 300;
-
-        const centerX = 195;
-        const centerY = 150;
-
-        const radius = 105;
-
-        const count = items.length;
-
-        if (count === 0) {
-            return "";
-        }
-
-        function point(index, r) {
-
-            const angle =
-                (-Math.PI / 2) +
-                ((Math.PI * 2 * index) / count);
-
-            return {
-                x: centerX + Math.cos(angle) * r,
-                y: centerY + Math.sin(angle) * r
-            };
+            return html;
         }
 
 
-        let gridHtml = "";
+        /* =========================================================
+           مصادیق مثبت و قابل بهبود
+           ========================================================= */
 
-        const levels = [20, 40, 60, 80, 100];
+        let positiveBehaviors = [];
 
-        levels.forEach(level => {
+        let improvementBehaviors = [];
 
-            const points = [];
 
-            for (let i = 0; i < count; i++) {
+        competencyRows.forEach(
+            item => {
 
-                const p =
-                    point(
-                        i,
-                        radius * level / 100
+                if (
+                    item.levelIndex === 0 ||
+                    item.levelIndex === 1
+                ) {
+
+                    positiveBehaviors.push(
+                        ...item.selectedBehaviors
                     );
 
-                points.push(
-                    `${p.x},${p.y}`
-                );
+                }
+
+
+                if (
+                    item.levelIndex === 5 ||
+                    item.levelIndex === 6
+                ) {
+
+                    improvementBehaviors.push(
+                        ...item.selectedBehaviors
+                    );
+
+                }
+
             }
-
-            gridHtml += `
-                <polygon
-                    points="${points.join(" ")}"
-                    fill="none"
-                    stroke="#b8bec5"
-                    stroke-width="1">
-                </polygon>
-            `;
-        });
-
-
-        let axisHtml = "";
-        let labelHtml = "";
-
-        items.forEach((item, index) => {
-
-            const outer =
-                point(index, radius);
-
-            const label =
-                point(index, radius + 35);
-
-            axisHtml += `
-                <line
-                    x1="${centerX}"
-                    y1="${centerY}"
-                    x2="${outer.x}"
-                    y2="${outer.y}"
-                    stroke="#c8ccd1"
-                    stroke-width="1">
-                </line>
-            `;
-
-            labelHtml += `
-                <text
-                    x="${label.x}"
-                    y="${label.y}"
-                    text-anchor="middle"
-                    font-size="10"
-                    fill="#333">
-                    ${escapeHtml(shortenText(item.title, 18))}
-                </text>
-            `;
-        });
-
-
-        const valuePoints = [];
-
-        items.forEach((item, index) => {
-
-            const value =
-                Math.max(0, item.score);
-
-            const p =
-                point(
-                    index,
-                    radius * value / 100
-                );
-
-            valuePoints.push(
-                `${p.x},${p.y}`
-            );
-        });
-
-
-        let dotsHtml = "";
-
-        items.forEach((item, index) => {
-
-            const p =
-                point(
-                    index,
-                    radius * item.score / 100
-                );
-
-            dotsHtml += `
-                <circle
-                    cx="${p.x}"
-                    cy="${p.y}"
-                    r="4"
-                    fill="#f28c28">
-                </circle>
-            `;
-        });
-
-
-        return `
-            <svg
-                width="${width}"
-                height="${height}"
-                viewBox="0 0 ${width} ${height}">
-
-                ${gridHtml}
-
-                ${axisHtml}
-
-                <polygon
-                    points="${valuePoints.join(" ")}"
-                    fill="rgba(242,140,40,.18)"
-                    stroke="#f28c28"
-                    stroke-width="2">
-                </polygon>
-
-                ${dotsHtml}
-
-                ${labelHtml}
-
-            </svg>
-        `;
-    }
-
-
-    /* =========================================================
-       ساخت کارنامه
-       ========================================================= */
-
-    const reportWindow =
-        window.open("", "_blank");
-
-    if (!reportWindow) {
-
-        alert(
-            "مرورگر اجازه باز کردن صفحه جدید را نداده است. لطفاً Popup را برای این سایت فعال کنید."
         );
 
-        return;
-    }
+
+        function createBulletList(items) {
+
+            if (
+                items.length === 0
+            ) {
+
+                return `
+
+                    <div class="empty-message">
+                        موردی ثبت نشده است
+                    </div>
+
+                `;
+            }
 
 
-    reportWindow.document.write(`
+            return items
+                .map(
+                    item => `
+
+                        <div class="bullet-item">
+                            • ${escapeHtml(item)}
+                        </div>
+
+                    `
+                )
+                .join("");
+        }
+
+
+        /* =========================================================
+           داده نمودار راداری
+           ========================================================= */
+
+        const radarItems =
+            competencyRows.map(
+                item => ({
+
+                    title:
+                        item.title,
+
+                    score:
+                        item.score
+
+                })
+            );
+
+
+        function createRadarChart(items) {
+
+            const width = 390;
+
+            const height = 300;
+
+            const centerX = 195;
+
+            const centerY = 150;
+
+            const radius = 105;
+
+            const count = items.length;
+
+
+            if (count === 0) {
+                return "";
+            }
+
+
+            function point(index, r) {
+
+                const angle =
+                    (-Math.PI / 2) +
+                    (
+                        (Math.PI * 2 * index) /
+                        count
+                    );
+
+
+                return {
+
+                    x:
+                        centerX +
+                        Math.cos(angle) *
+                        r,
+
+                    y:
+                        centerY +
+                        Math.sin(angle) *
+                        r
+
+                };
+            }
+
+
+            let gridHtml = "";
+
+
+            const levels =
+                [20, 40, 60, 80, 100];
+
+
+            levels.forEach(
+                level => {
+
+                    const points = [];
+
+
+                    for (
+                        let i = 0;
+                        i < count;
+                        i++
+                    ) {
+
+                        const p =
+                            point(
+                                i,
+                                radius *
+                                level /
+                                100
+                            );
+
+
+                        points.push(
+                            `${p.x},${p.y}`
+                        );
+                    }
+
+
+                    gridHtml += `
+
+                        <polygon
+                            points="${points.join(" ")}"
+                            fill="none"
+                            stroke="#b8bec5"
+                            stroke-width="1">
+                        </polygon>
+
+                    `;
+                }
+            );
+
+
+            let axisHtml = "";
+
+            let labelHtml = "";
+
+
+            items.forEach(
+                (item, index) => {
+
+                    const outer =
+                        point(
+                            index,
+                            radius
+                        );
+
+
+                    const label =
+                        point(
+                            index,
+                            radius + 35
+                        );
+
+
+                    axisHtml += `
+
+                        <line
+                            x1="${centerX}"
+                            y1="${centerY}"
+                            x2="${outer.x}"
+                            y2="${outer.y}"
+                            stroke="#c8ccd1"
+                            stroke-width="1">
+                        </line>
+
+                    `;
+
+
+                    labelHtml += `
+
+                        <text
+                            x="${label.x}"
+                            y="${label.y}"
+                            text-anchor="middle"
+                            font-size="10"
+                            fill="#333">
+
+                            ${escapeHtml(
+                                shortenText(
+                                    item.title,
+                                    18
+                                )
+                            )}
+
+                        </text>
+
+                    `;
+                }
+            );
+
+
+            const valuePoints = [];
+
+
+            items.forEach(
+                (item, index) => {
+
+                    const value =
+                        Math.max(
+                            0,
+                            item.score
+                        );
+
+
+                    const p =
+                        point(
+                            index,
+                            radius *
+                            value /
+                            100
+                        );
+
+
+                    valuePoints.push(
+                        `${p.x},${p.y}`
+                    );
+
+                }
+            );
+
+
+            let dotsHtml = "";
+
+
+            items.forEach(
+                (item, index) => {
+
+                    const p =
+                        point(
+                            index,
+                            radius *
+                            item.score /
+                            100
+                        );
+
+
+                    dotsHtml += `
+
+                        <circle
+                            cx="${p.x}"
+                            cy="${p.y}"
+                            r="4"
+                            fill="#f28c28">
+                        </circle>
+
+                    `;
+                }
+            );
+
+
+            return `
+
+                <svg
+                    width="${width}"
+                    height="${height}"
+                    viewBox="0 0 ${width} ${height}">
+
+                    ${gridHtml}
+
+                    ${axisHtml}
+
+                    <polygon
+                        points="${valuePoints.join(" ")}"
+                        fill="rgba(242,140,40,.18)"
+                        stroke="#f28c28"
+                        stroke-width="2">
+                    </polygon>
+
+                    ${dotsHtml}
+
+                    ${labelHtml}
+
+                </svg>
+
+            `;
+        }
+
+
+        /* =========================================================
+           ساخت کارنامه
+           ========================================================= */
+
+        const reportWindow =
+            window.open(
+                "",
+                "_blank"
+            );
+
+
+        if (!reportWindow) {
+
+            alert(
+                "مرورگر اجازه باز کردن صفحه جدید را نداده است. لطفاً Popup را برای این سایت فعال کنید."
+            );
+
+            return;
+        }
+
+
+        reportWindow.document.write(`
 
 <!DOCTYPE html>
 
@@ -3332,7 +4057,12 @@ body {
         <div class="improvement-text">
 
             ${escapeHtml(
-                document.getElementById("improvementText").value.trim()
+                document
+                    .getElementById(
+                        "improvementText"
+                    )
+                    .value
+                    .trim()
             )}
 
         </div>
@@ -3354,33 +4084,36 @@ body {
 `);
 
 
-    reportWindow.document.close();
-}
-
-
-/* =========================================================
-   توابع کمکی کارنامه
-   ========================================================= */
-
-function escapeHtml(value) {
-
-    return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
-
-function shortenText(text, maxLength) {
-
-    if (text.length <= maxLength) {
-        return text;
+        reportWindow.document.close();
     }
 
-    return text.substring(0, maxLength) + "…";
-}
+
+    /* =========================================================
+       توابع کمکی کارنامه
+       ========================================================= */
+
+    function escapeHtml(value) {
+
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+
+    function shortenText(text, maxLength) {
+
+        if (text.length <= maxLength) {
+            return text;
+        }
+
+        return text.substring(
+            0,
+            maxLength
+        ) + "…";
+    }
 
 
     /* =========================================================

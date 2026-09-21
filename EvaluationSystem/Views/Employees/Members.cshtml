@@ -1,0 +1,148 @@
+@model EvaluationSystem.Models.ViewModels.EmployeeListViewModel
+
+@{
+    ViewData["Title"] = "اعضای لیست ارزیابی";
+}
+
+<div dir="rtl" class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h2>
+            اعضای لیست ارزیابی
+        </h2>
+
+        <a asp-controller="Employees"
+           asp-action="Index"
+           class="btn btn-secondary">
+
+            بازگشت به لیست‌ها
+
+        </a>
+
+    </div>
+
+
+    @if (Model.EvaluationList != null)
+    {
+        <div class="card mb-4">
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-3 mb-2">
+                        <strong>عنوان لیست:</strong>
+                        @Model.EvaluationList.Title
+                    </div>
+
+                    <div class="col-md-2 mb-2">
+                        <strong>سطح عملکرد:</strong>
+                        @Model.EvaluationList.PerformanceLevel
+                    </div>
+
+                    <div class="col-md-2 mb-2">
+                        <strong>سرانه:</strong>
+                        @Model.EvaluationList.PerPersonScore
+                    </div>
+
+                    <div class="col-md-2 mb-2">
+                        <strong>تعداد:</strong>
+                        @Model.EvaluationList.EmployeeCount
+                    </div>
+
+                    <div class="col-md-3 mb-2">
+                        <strong>امتیاز در دسترس:</strong>
+                        @Model.EvaluationList.AvailableScore
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+
+    <h4 class="mb-3">
+        کارکنان این لیست
+    </h4>
+
+
+    @if (Model.Employees.Count == 0)
+    {
+        <div class="alert alert-info text-center">
+
+            هیچ کارمندی در این لیست قرار ندارد.
+
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-hover text-end">
+
+                <thead class="table-dark">
+
+                    <tr>
+                        <th>کد پرسنلی</th>
+                        <th>نام</th>
+                        <th>نام خانوادگی</th>
+                        <th>عنوان شغلی</th>
+                        <th>عملیات</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @foreach (var employee in Model.Employees)
+                    {
+                        var job =
+                            Model.Jobs.FirstOrDefault(
+                                j => j.Id == employee.JobId);
+
+                        <tr>
+
+                            <td>
+                                @employee.PersonnelCode
+                            </td>
+
+                            <td>
+                                @employee.FirstName
+                            </td>
+
+                            <td>
+                                @employee.LastName
+                            </td>
+
+                            <td>
+                                @job?.Title
+                            </td>
+
+                            <td>
+
+                                <a asp-controller="Employees"
+                                   asp-action="Evaluate"
+                                   asp-route-id="@employee.PersonnelCode"
+                                   asp-route-listId="@Model.EvaluationList!.Id"
+                                   class="btn btn-primary btn-sm">
+
+                                    ارزیابی
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+    }
+
+</div>

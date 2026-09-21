@@ -1,47 +1,135 @@
-@model EvaluationSystem.Models.ViewModels.EmployeeListViewModel
+@model EvaluationSystem.Models.ViewModels.EvaluationListsViewModel
 
 @{
-    ViewData["Title"] = "کارکنان تحت ارزیابی";
+    ViewData["Title"] = "لیست‌های ارزیابی";
 }
 
 <div dir="rtl" class="container mt-4">
 
-    <h2 class="text-center mb-4">کارکنان تحت ارزیابی من</h2>
-    
-    <table class="table table-bordered table-hover text-end">
+    <h2 class="text-center mb-4">
+        لیست‌های ارزیابی
+    </h2>
 
-        <thead class="table-dark">
-            <tr>
-                <th>کد پرسنلی</th>
-                <th>نام</th>
-                <th>نام خانوادگی</th>
-                <th>شغل</th>
-            </tr>
-        </thead>
+    @if (Model.EvaluationLists.Count == 0)
+    {
+        <div class="alert alert-info text-center">
+            در حال حاضر لیست ارزیابی برای شما تعریف نشده است.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
 
-        <tbody>
+            <table class="table table-bordered table-hover text-end">
 
-            @foreach (var employee in Model.Employees)
-            {
-                var job = Model.Jobs.FirstOrDefault(j => j.Id == employee.JobId);
+                <thead class="table-dark">
 
-                <tr>
-                    <td>@employee.PersonnelCode</td>
-                    <td>@employee.FirstName</td>
-                    <td>@employee.LastName</td>
+                    <tr>
+                        <th>ردیف</th>
+                        <th>عنوان لیست</th>
+                        <th>سطح عملکرد</th>
+                        <th>سرانه امتیاز</th>
+                        <th>تعداد کارکنان</th>
+                        <th>امتیاز در دسترس</th>
+                        <th>مجموع امتیاز نهایی</th>
+                        <th>وضعیت</th>
+                        <th>عملیات</th>
+                    </tr>
 
-<td>
-    <a asp-controller="Employees"
-       asp-action="Evaluate"
-       asp-route-id="@employee.PersonnelCode">
-        @job?.Title
-    </a>
-</td>
-                </tr>
-            }
+                </thead>
 
-        </tbody>
+                <tbody>
 
-    </table>
+                    @for (int i = 0;
+                          i < Model.EvaluationLists.Count;
+                          i++)
+                    {
+                        var list =
+                            Model.EvaluationLists[i];
+
+                        <tr>
+
+                            <td>
+                                @(i + 1)
+                            </td>
+
+                            <td>
+                                @list.Title
+                            </td>
+
+                            <td class="text-center">
+                                @list.PerformanceLevel
+                            </td>
+
+                            <td class="text-center">
+                                @list.PerPersonScore
+                            </td>
+
+                            <td class="text-center">
+                                @list.EmployeeCount
+                            </td>
+
+                            <td class="text-center">
+                                @list.AvailableScore
+                            </td>
+
+                            <td class="text-center">
+
+                                @if (list.TotalFinalScore == 0)
+                                {
+                                    <span>-</span>
+                                }
+                                else
+                                {
+                                    @list.TotalFinalScore
+                                }
+
+                            </td>
+
+                            <td class="text-center">
+
+                                @if (list.TotalFinalScore == 0)
+                                {
+                                    <span class="badge bg-secondary">
+                                        ارزیابی نشده
+                                    </span>
+                                }
+                                else if (list.IsValid)
+                                {
+                                    <span class="badge bg-success">
+                                        معتبر
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">
+                                        نامعتبر
+                                    </span>
+                                }
+
+                            </td>
+
+                            <td class="text-center">
+
+                                <a asp-controller="Employees"
+                                   asp-action="Members"
+                                   asp-route-id="@list.Id"
+                                   class="btn btn-primary btn-sm">
+
+                                    مشاهده کارکنان
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+    }
 
 </div>
